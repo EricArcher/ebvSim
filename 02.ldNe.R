@@ -1,0 +1,1 @@
+snps.ne <- ldNe(sim.snps.g)

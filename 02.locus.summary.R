@@ -1,0 +1,1 @@
+snps.smry <- summarizeLoci(sim.snps.g)
