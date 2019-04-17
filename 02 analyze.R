@@ -1,8 +1,9 @@
 rm(list = ls())
 library(strataG)
+library(tidyverse)
 load("ebvSim ws.rdata")
 
-sim.snps <- fscReadArp(snp.p)
+sim.snps <- fscReadArp(snp.p, drop.mono = TRUE)
 sim.snps.g <- df2gtypes(sim.snps, ploidy = 2)
 
 source("02.locus.summary.R")

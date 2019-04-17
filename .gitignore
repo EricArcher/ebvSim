@@ -5,5 +5,5 @@
 *.Rproj
 .DS_Store
 ebvSim.*/
-ebvSim.*
+ebvSim*
 seed.txt

@@ -1,7 +1,7 @@
 rm(list = ls())
 # run next two lines if you don't have the latest devel version of strataG
-if(!require(devtools)) install.packages("devtools")
-install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
+# if(!require(devtools)) install.packages("devtools")
+# devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
 library(strataG)
 
 ebvSim <- function(genetics, label, num.sim, ploidy = 2) {
@@ -23,7 +23,7 @@ ebvSim <- function(genetics, label, num.sim, ploidy = 2) {
 }
 
 snp.p <- ebvSim(
-  fscSettingsGenetics(fscBlock_snp(10, 1e-3), num.chrom = 1000),
+  fscSettingsGenetics(fscBlock_snp(1, 1e-5), num.chrom = 1000),
   label = "ebvSim.snps",
   num.sim = 1
 )
@@ -33,5 +33,7 @@ dna.msat.p <- ebvSim(
   label = "ebvSim.dna.msat",
   num.sim = 1
 )
+
+# run rmetasim to establish linkage disequilibrium
 
 save.image("ebvSim ws.rdata")
