@@ -1,5 +1,7 @@
 library(inbreedR)
 
+cat(format(Sys.time()), "Computing g2...\n")
+
 # create list of genotypes in inbreedR input format
 # one element for each population and a final element of all genotypes
 pop.geno <- split(sim.snps, sim.snps$deme)

@@ -1,6 +1,8 @@
 library(detectRUNS)
 library(hierfstat)
 
+cat(format(Sys.time()), "Computing Froh...\n")
+
 #' Create 'hierfstat' input file by converting 0:2 genotypes to integer alleles
 snp.hf <- fscReadArp(snp.p, coded.snps = TRUE)
 for(i in 3:ncol(snp.hf)) snp.hf[, i] <- c(11, 12, 22)[snp.hf[, i] + 1]
