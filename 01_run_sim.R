@@ -5,7 +5,7 @@ rm(list = ls())
 # devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
 
 library(strataG)
-source("misc funcs.R")
+source("misc_funcs.R")
 
 # run fastsimcoal2
 snp.p <- ebvSim(
