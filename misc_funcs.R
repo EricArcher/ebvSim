@@ -57,11 +57,10 @@ loadLandscape <- function(sc, AlleleFreqs, num.gens) {
   for(i in 1:length(AlleleFreqs)) {
     Rland <- rmetasim::landscape.new.locus(
       Rland, type = 2, ploidy = 2, mutationrate = 0,
-      transmission = 0, numalleles = 2, states = NULL
+      transmission = 0, numalleles = 2, allelesize = 1,
+      frequencies = AlleleFreqs[[i]], states = rownames(AlleleFreqs[[i]])
     )
   }
-  
-  rmetasim::landscape.new.ind.genos(
-    Rland, rep(c(sc$ne, 0), sc$num.pops), AlleleFreqs
-  )
+
+  rmetasim::landscape.new.individuals(Rland, rep(c(sc$ne, 0), sc$num.pops))
 }
