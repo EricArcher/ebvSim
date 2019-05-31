@@ -1,5 +1,7 @@
 library(detectRUNS)
 library(hierfstat)
+library(dplyr)
+library(tibble)
 
 cat(format(Sys.time()), "Computing Froh...\n")
 
