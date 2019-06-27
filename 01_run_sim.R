@@ -7,20 +7,34 @@ rm(list = ls())
 library(strataG)
 source("misc_funcs.R")
 
-# run fastsimcoal2
-snp.p <- ebvSim(
-  fscSettingsGenetics(fscBlock_snp(1, 1e-5), num.chrom = 1000),
-  label = "ebvSim.snps",
-  num.sim = 1
+scenarios <- expand.grid(
+  num.pops = c(1, 5),
+  Ne = c(100, 1000),
+  num.samples = c(10, 100),
+  mig.rate = 1e-5,
+  mig.type = "island",
+  dvgnc.time = 200,
+  stringsAsFactors = FALSE
 )
+scenarios$scenario <- 1:nrow(scenarios)
+
+genetics <- fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000)
+
+# run fastsimcoal2
+ebvSim(scenarios, genetics, label = "ebvSim.snps", num.sim = 3)
+
+save.image("ebvSim ws.rdata")
+
+
+
+
 
 # convert SNPs to gtypes
-sim.snps <- fscReadArp(snp.p, drop.mono = TRUE)
-sim.snps.g <- df2gtypes(sim.snps, ploidy = 2)
+# sim.snps.g <- df2gtypes(sim.snps, ploidy = 2)
 
 # run rmetasim to establish linkage disequilibrium
 # num.rms.gens <- 5
-af <- alleleFreqs(sim.snps.g, by.strata = T, type = "prop")
+#af <- alleleFreqs(sim.snps.g, by.strata = T, type = "prop")
 # rl <- loadLandscape(sc, af, num.rms.gens)
 # for(i in 1:num.rms.gens) {
 #   rl <- rmetasim::landscape.simulate(rl, 1)
@@ -28,4 +42,3 @@ af <- alleleFreqs(sim.snps.g, by.strata = T, type = "prop")
 # }
 # rl.g <- landscape2gtypes(rl)
 
-save.image("ebvSim ws.rdata")

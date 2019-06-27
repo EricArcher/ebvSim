@@ -1,19 +1,81 @@
-ebvSim <- function(genetics, label, num.sim, ploidy = 2) {
-  p <- fscWrite(
-    demes = fscSettingsDemes(
-      fscDeme(500, 100),
-      fscDeme(500, 100),
-      fscDeme(500, 100), 
-      ploidy = ploidy
-    ),
-    migration = fscSettingsMigration(
-      matrix(c(0, 0.5, 0.005, 0.5, 0, 0.0005, 0.005, 0.0005, 0), ncol = 3)
-    ),
-    events = fscSettingsEvents(fscEvent(2000, 2, 1), fscEvent(2000, 1, 0)),
-    genetics = genetics,
-    label = label
+makeMigSettings <- function(mig.rate, num.pops, 
+                        type = c("island", "stepping.stone")) {
+  type <- match.arg(type)
+  switch(
+    type,      
+    island = {
+      m <- mig.rate / (num.pops - 1)
+      mat <- matrix(rep(m, num.pops ^ 2), nrow = num.pops)
+      diag(mat) <- 1 - mig.rate
+      fscSettingsMigration(mat)
+    },
+    stepping.stone = {
+      mat <- matrix(0, nrow = num.pops, ncol = num.pops)
+      m <- mig.rate / 2
+      for (k in 1:(num.pops - 1)) {
+        mat[k, k + 1] <- mat[k + 1, k] <- m
+      }
+      mat[1, num.pops] <- mat[num.pops, 1] <- m
+      diag(mat) <- 1 - mig.rate
+      fscSettingsMigration(mat)
+    }
   )
-  fscRun(p, num.sim = num.sim)
+}
+
+
+makeEventSettings <- function(dvgnc.time, num.pops) {
+  if(num.pops == 1) return(NULL)
+  pop.pairs <- t(combn(num.pops, 2) - 1)
+  pop.pairs <- pop.pairs[pop.pairs[, 1] == 0, , drop = FALSE]
+  do.call(
+    fscSettingsEvents, 
+    lapply(
+      1:nrow(pop.pairs),
+      function(i) fscEvent(dvgnc.time, pop.pairs[i, 2], pop.pairs[i, 1])
+    )
+  )
+}
+
+
+ebvSim <- function(scenarios, genetics, label, num.sim, ploidy = 2) {
+  out.folder <- paste0(label, ".scenario.replicates")
+  if(!dir.exists(out.folder)) dir.create(out.folder)
+  fname <- paste0(label, "_scenarios.csv")
+  write.csv(scenarios, file = file.path(out.folder, fname), row.names = FALSE)
+  
+  for(sc.i in 1:nrow(scenarios)) {
+    sc <- scenarios[sc.i, ]
+    
+    deme.list <- lapply(1:sc$num.pops, function(i) {
+      fscDeme(deme.size = sc$Ne, sample.size = sc$num.samples)
+    })
+    deme.list$ploidy <- ploidy
+    
+    p <- fscWrite(
+      demes = do.call(fscSettingsDemes, deme.list),
+      migration = if(sc$num.pops > 1) {
+        makeMigSettings(sc$mig.rate, sc$num.pops, sc$mig.type) 
+      } else NULL,
+      events = makeEventSettings(sc$dvgnc.time, sc$num.pops),
+      genetics = genetics,
+      label = label
+    )
+    
+    p <- fscRun(p, num.sim = num.sim)
+    
+    for(sim.i in 1:num.sim) {
+      gen.data <- fscReadArp(p, sim = c(1, sim.i), drop.mono = TRUE)
+      fname <- paste0(
+        label, "_", 
+        "scenario_", sc$scenario, 
+        "_replicate_", sim.i, 
+        ".csv"
+      )
+      write.csv(gen.data, file = file.path(out.folder, fname), row.names = FALSE)
+    }
+  }
+  
+  invisible(out.folder)
 }
 
 
