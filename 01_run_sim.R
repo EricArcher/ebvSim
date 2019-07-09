@@ -47,9 +47,6 @@ dl.dir
 dir(dl.dir)
 
 
-# convert SNPs to gtypes
-# sim.snps.g <- df2gtypes(sim.snps, ploidy = 2)
-
 # run rmetasim to establish linkage disequilibrium
 # num.rms.gens <- 5
 #af <- alleleFreqs(sim.snps.g, by.strata = T, type = "prop")

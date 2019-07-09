@@ -46,27 +46,19 @@ ebvSim <- function(scenarios, genetics, label, num.sim, ploidy = 2,
   
   fname <- paste0(label, "_scenarios.csv")
   out.folder <- paste0(label, "_scenario.replicates")
-  
   google.rep.dir <- NULL
   if(!is.null(google.drive.id)) {
     label.pattern = paste0(fname, "|", out.folder)
-    drive.files <- drive_ls(
-      as_id(google.drive.id), 
-      pattern = label.pattern, 
-      verbose = FALSE
-    )
+    id <- as_id(google.drive.id)
+    drive.files <- drive_ls(id, pattern = label.pattern, verbose = FALSE)
     if(nrow(drive.files) > 0) {
       stop(
-        "the scenario file and/or replicate folder for '", label, 
-        "' already exists on this Google Drive.\n",
-        "Delete them before running the sim with this label."
+        "The scenario file and/or replicate folder for '", label, 
+        "' already exists on this Google Drive. ",
+        "Either delete them or change the label for the run."
       )
     } else {
-      google.rep.dir <- drive_mkdir(
-        out.folder, 
-        parent = as_id(google.drive.id), 
-        verbose = FALSE
-      )
+      google.rep.dir <- drive_mkdir(out.folder, parent = id, verbose = FALSE)
     }
   }
     
