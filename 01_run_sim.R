@@ -3,10 +3,15 @@ rm(list = ls())
 # run next two lines if you don't have the latest devel version of strataG
 # if(!require(devtools)) install.packages("devtools")
 # devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
-
-library(strataG)
+stopifnot(require(tidyverse))
+stopifnot(require(strataG))
 source("misc_funcs.R")
 
+
+label <- "ebvSim.snps2"
+google.drive.id <- "1TGI2TVFnOAx0ib1GdBaL80Pwq-7ruqG1"
+
+# set scenarios
 scenarios <- expand.grid(
   num.pops = c(1, 5),
   Ne = c(100, 1000),
@@ -15,18 +20,31 @@ scenarios <- expand.grid(
   mig.type = "island",
   dvgnc.time = 200,
   stringsAsFactors = FALSE
-)
-scenarios$scenario <- 1:nrow(scenarios)
+) %>% 
+  mutate(scenario = 1:n()) %>% 
+  select(scenario, everything())
 
+# specify SNP loci
 genetics <- fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000)
 
 # run fastsimcoal2
-ebvSim(scenarios, genetics, label = "ebvSim.snps", num.sim = 3)
-
+out.dir <- ebvSim(
+  scenarios = scenarios, 
+  genetics = genetics, 
+  label = label, 
+  num.sim = 3,
+  google.drive.id = google.drive.id
+)
 save.image("ebvSim ws.rdata")
 
+# get run labels from google drive
+run.labels <- availRuns(google.drive.id)
+run.labels
 
-
+# download a run from google drive
+dl.dir <- downloadRun(run.labels[1], google.drive.id, "dl.run")
+dl.dir
+dir(dl.dir)
 
 
 # convert SNPs to gtypes
