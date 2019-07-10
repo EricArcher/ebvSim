@@ -3,17 +3,22 @@ rm(list = ls())
 # run next two lines if you don't have the latest devel version of strataG
 # if(!require(devtools)) install.packages("devtools")
 # devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
+
+# you will also need the latest version of rmetasim from GitHub.
+# uncomment the next two lines and run to install it
+# if(!require(devtools)) install.packages("devtools")
+# devtools::install_github("stranda/rmetasim", dependencies = TRUE)
+
 stopifnot(require(tidyverse))
 stopifnot(require(strataG))
 source("misc_funcs.R")
 
-
-label <- "ebvSim.snps2"
+label <- "ebvSim.snps_wo_rmetasim"
 google.drive.id <- "1TGI2TVFnOAx0ib1GdBaL80Pwq-7ruqG1"
 
 # set scenarios
 scenarios <- expand.grid(
-  num.pops = c(1, 5),
+  num.pops = c(1, 3),
   Ne = c(100, 1000),
   num.samples = c(10, 100),
   mig.rate = 1e-5,
@@ -33,7 +38,8 @@ out.dir <- ebvSim(
   genetics = genetics, 
   label = label, 
   num.sim = 3,
-  google.drive.id = google.drive.id
+  google.drive.id = google.drive.id,
+  run.rmetasim = FALSE
 )
 save.image("ebvSim ws.rdata")
 
@@ -45,15 +51,4 @@ run.labels
 dl.dir <- downloadRun(run.labels[1], google.drive.id, "dl.run")
 dl.dir
 dir(dl.dir)
-
-
-# run rmetasim to establish linkage disequilibrium
-# num.rms.gens <- 5
-#af <- alleleFreqs(sim.snps.g, by.strata = T, type = "prop")
-# rl <- loadLandscape(sc, af, num.rms.gens)
-# for(i in 1:num.rms.gens) {
-#   rl <- rmetasim::landscape.simulate(rl, 1)
-#   rl <- killExcess(rl, sc$ne)
-# }
-# rl.g <- landscape2gtypes(rl)
 
