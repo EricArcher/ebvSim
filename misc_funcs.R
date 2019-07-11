@@ -22,6 +22,24 @@ makeMigMat <- function(mig.rate, num.pops,
 }
 
 
+makeScenarios <- function(num.pops, Ne, num.samples, mig.rate, 
+                          mig.type = c("island", "stepping.stone"),
+                          dvgnc.time) {
+  stopifnot(require(tidyverse))
+  
+  expand.grid(
+    num.pops = num.pops,
+    Ne = Ne,
+    num.samples = num.samples,
+    mig.rate = mig.rate,
+    mig.type = match.arg(mig.type),
+    dvgnc.time = dvgnc.time,
+    stringsAsFactors = FALSE
+  ) %>% 
+    mutate(scenario = 1:n()) %>% 
+    select(scenario, everything())
+}
+
 makeEventSettings <- function(dvgnc.time, num.pops) {
   stopifnot(require(strataG))
   if(num.pops == 1) return(NULL)
@@ -75,7 +93,7 @@ writeScenarios <- function(label, scenarios, google.drive.id = NULL) {
 }
 
 
-runFscSim <- function(sc, ploidy, num.sim) {
+runFscSim <- function(sc, ploidy, num.rep) {
   stopifnot(require(strataG))
   stopifnot(require(magrittr))
   deme.list <- lapply(1:sc$num.pops, function(i) {
@@ -93,14 +111,12 @@ runFscSim <- function(sc, ploidy, num.sim) {
     genetics = genetics,
     label = label
   ) %>% 
-    fscRun(num.sim = num.sim)
+    fscRun(num.sims = num.rep)
 }
 
 macFreqs <- function(mac) {
-  c(
-    '1' = mean(mac == 0) + (mean(mac == 1) / 2), 
-    '2' = mean(mac == 2) + (mean(mac == 1) / 2)
-  )
+  maf <- mean(mac == 0) + (mean(mac == 1) / 2)
+  c('1' = maf, '2' = 1 - maf)
 }
 
 
@@ -123,7 +139,7 @@ calcFreqs <- function(snps) {
       macFreqs(loc.df$mac)
     }),
     pop = lapply(split(mac.df, mac.df$stratum), function(st.df) {
-      lapply(split(st.df, st.df$locus), function(locus) macFreqs(locus$mac))
+      lapply(split(st.df, st.df$locus), function(loc.df) macFreqs(loc.df$mac))
     })
   )
 }
@@ -171,7 +187,7 @@ loadLandscape <- function(freqs, sc) {
 }
 
 
-ebvSim <- function(scenarios, genetics, label, num.sim, ploidy = 2, 
+ebvSim <- function(scenarios, genetics, label, num.rep, ploidy = 2, 
                    google.drive.id = NULL, run.rmetasim = TRUE) {
   stopifnot(require(strataG))
   stopifnot(require(magrittr))
@@ -184,9 +200,9 @@ ebvSim <- function(scenarios, genetics, label, num.sim, ploidy = 2,
     cat(format(Sys.time()), "---- Scenario", sc.i, "----\n")
     
     sc <- scenarios[sc.i, ]
-    p <- runFscSim(sc, ploidy, num.sim)
+    p <- runFscSim(sc, ploidy, num.rep)
     
-    for(sim.i in 1:num.sim) {
+    for(sim.i in 1:num.rep) {
       gen.data <- fscReadArp(p, sim = c(1, sim.i), drop.mono = TRUE)
       if(run.rmetasim) {
         gen.data <- gen.data %>% 
@@ -217,7 +233,7 @@ loadScenarios <- function(label, folder = getwd()) {
 
 
 loadGenotypes <- function(label, scenario, replicate, folder = getwd()) {
-  rep.folder <- labelFolder(label)
+  rep.folder <- repFolder(label)
   fname <- file.path(rep.folder, repFname(label, scenario, replicate))
   read.csv(
     file.path(folder, fname), 
