@@ -4,7 +4,4 @@
 .Ruserdata
 *.Rproj
 .DS_Store
-ebvSim.*/
-ebvSim*
-seed.txt
 .httr-oauth

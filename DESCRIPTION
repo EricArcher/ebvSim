@@ -1,0 +1,22 @@
+Package: ebvSim
+Type: Package
+Title: Essential Biodiversity Variables Genetic Simulations
+Description: Simulate SNP data for a specified set of scenarios and run analyses.
+Version: 0.9
+Date: 2019-07-11
+Authors@R: c(EA = person("Eric", "Archer", email = "eric.archer@noaa.gov", role = c("aut", "cre")))
+Depends:
+  magrittr
+Imports:
+  dplyr,
+  googledrive,
+  rlang,
+  rmetasim,
+  stats,
+  strataG,
+  tibble,
+  tidyr,
+  utils
+License: GNU General Public License
+RoxygenNote: 6.1.1
+Encoding: UTF-8

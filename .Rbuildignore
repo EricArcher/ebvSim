@@ -1,0 +1,13 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^devel/*
+^README\.Rmd$
+^README-.*\.png$
+^NEWS\.Rmd$
+^NEWS\.md$
+tar.gz$
+.gitignore
+^\.travis\.yml$
+^appveyor\.yml$
+.DS_Store
+.httr-oauth
