@@ -12,7 +12,7 @@ To install the latest version from GitHub:
 # make sure you have Rtools installed
 if(!require('devtools')) install.packages('devtools')
 # install package from GitHub
-devtools::install_github('ericarcher/ebvSim')
+devtools::install_github('ericarcher/EBV_Simulations')
 ```
 
 ### Contact
