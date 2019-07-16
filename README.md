@@ -17,8 +17,8 @@ devtools::install_github('ericarcher/EBV_Simulations/ebvSim')
 
 ### Contact
 
-* submit suggestions and bug-reports: <https://github.com/ericarcher/ebvSim/issues>
-* send a pull request: <https://github.com/ericarcher/ebvSim/>
+* submit suggestions and bug-reports: <https://github.com/ericarcher/EBV_Simulations/issues>
+* send a pull request: <https://github.com/ericarcher/EBV_Simulations/>
 * e-mail: <eric.archer@noaa.gov>
 
 ### version 0.9 (devel)
