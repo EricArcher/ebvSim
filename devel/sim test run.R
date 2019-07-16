@@ -11,8 +11,8 @@ rm(list = ls())
 library(ebvSim)
 library(strataG)
 
-label <- "ebvSim.snps_google_drive_1"
-num.rep <- 10
+label <- "ebvSim.snps_test_1"
+num.rep <- 3
 google.drive.id <- "1TGI2TVFnOAx0ib1GdBaL80Pwq-7ruqG1"
 
 # set scenarios
@@ -25,17 +25,14 @@ scenarios <- makeScenarios(
   dvgnc.time = 200
 )
 
-# specify SNP loci
-genetics <- fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000)
-
 # run fastsimcoal2
 out.dir <- runEBVsim(
   label = label,
   scenarios = scenarios,
-  genetics = genetics,
+  genetics = fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000),
   num.rep = num.rep,
-  google.drive.id = google.drive.id,
+  google.drive.id = NULL, #google.drive.id,
   run.rmetasim = TRUE
 )
 
-save.image(paste0(label, "_ws.rdata"))
+source("analysis test.R")

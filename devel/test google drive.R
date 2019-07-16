@@ -1,6 +1,8 @@
 rm(list = ls())
 library(ebvSim)
 
+google.drive.id <- "1TGI2TVFnOAx0ib1GdBaL80Pwq-7ruqG1"
+
 # get run labels from google drive
 run.labels <- availRuns(google.drive.id)
 run.labels
