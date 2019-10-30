@@ -21,6 +21,9 @@ Imports:
   tibble,
   tidyr,
   utils
+Remotes:
+  stranda/rmetasim,
+  ericarcher/stratag@redevel2018
 License: GNU General Public License
 RoxygenNote: 6.1.1
 Encoding: UTF-8
