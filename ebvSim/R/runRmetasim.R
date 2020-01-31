@@ -46,7 +46,7 @@ runRmetasim <- function(freqs, sc) {
   Rland %>% 
     rmetasim::landscape.new.individuals(rep(c(sc$Ne, 0), sc$num.pops)) %>% 
     rmetasim::landscape.setpopfreq(freqs$pop) %>% 
-    rmetasim::landscape.simulate(Rland, numit = sc$rmetasim.ngen)
+    rmetasim::landscape.simulate(numit = sc$rmetasim.ngen)
 }
 
 #' @noRd

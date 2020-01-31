@@ -8,6 +8,7 @@
 #' @param ploidy ploidy of genetic data.
 #' @param num.rep number of replicates to run for each scenario.
 #' @param use.wd use working directory for fastsimcoal files?
+#' @param fsc.exec name of fastsimcoal executable.
 #' 
 #' @return parameter output from `strataG::fscRun()`
 #'   
@@ -15,7 +16,7 @@
 #' 
 #' @export
 #' 
-runFscSim <- function(label, sc, genetics, ploidy, num.rep, use.wd) {
+runFscSim <- function(label, sc, genetics, ploidy, num.rep, use.wd, fsc.exec) {
   deme.list <- lapply(1:sc$num.pops, function(i) {
     strataG::fscDeme(deme.size = sc$Ne, sample.size = sc$num.samples)
   })
@@ -32,5 +33,5 @@ runFscSim <- function(label, sc, genetics, ploidy, num.rep, use.wd) {
     label = label,
     use.wd = use.wd
   ) %>% 
-    strataG::fscRun(num.sims = num.rep, num.cores = 1)
+    strataG::fscRun(num.sims = num.rep, num.cores = 1, exec = fsc.exec)
 }

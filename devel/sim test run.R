@@ -19,17 +19,14 @@ params <- list(
     num.samples = c(10, 100),
     mig.rate = 1e-5,
     mig.type = "island",
-    dvgnc.time = 100
+    dvgnc.time = 100, 
+    rmetasim.ngen = 10
   ),
   genetics =  fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000),
   num.rep = 10,
   google.drive.id = NULL,
-  run.rmetasim = TRUE,
   delete.fsc.files = TRUE,
   use.wd = FALSE
 )
 
 output <- runEBVsim(params, num.cores = 4)
-
-#source("analysis test.R")
-

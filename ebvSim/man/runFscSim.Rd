@@ -4,7 +4,7 @@
 \alias{runFscSim}
 \title{Run fastsimcoal}
 \usage{
-runFscSim(label, sc, genetics, ploidy, num.rep, use.wd)
+runFscSim(label, sc, genetics, ploidy, num.rep, use.wd, fsc.exec)
 }
 \arguments{
 \item{label}{label of simulation run.}
@@ -19,6 +19,8 @@ runFscSim(label, sc, genetics, ploidy, num.rep, use.wd)
 \item{num.rep}{number of replicates to run for each scenario.}
 
 \item{use.wd}{use working directory for fastsimcoal files?}
+
+\item{fsc.exec}{name of fastsimcoal executable.}
 }
 \value{
 parameter output from `strataG::fscRun()`

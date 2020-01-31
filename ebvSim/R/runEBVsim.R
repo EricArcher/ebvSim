@@ -4,6 +4,7 @@
 #' @param params list of parameters for scenario runs. See \code{Details} for 
 #'   description of format.
 #' @param num.cores number of cores to use.
+#' @param fsc.exec name of fastsimcoal executable.
 #' 
 #' @details \code{params} must be a list with the following elements:
 #' \tabular{ll}{
@@ -21,7 +22,7 @@
 #' 
 #' @export
 #'  
-runEBVsim <- function(params, num.cores) {
+runEBVsim <- function(params, num.cores, fsc.exec = "fsc26") {
   params$folders <- writeScenarios(
     params$label, 
     params$scenarios, 
@@ -33,23 +34,23 @@ runEBVsim <- function(params, num.cores) {
   
   num.sc <- nrow(params$scenarios)
   params$scenario.runs <- if(num.cores == 1) {  
-    lapply(1:num.sc, .runScenario, params = params)
+    lapply(1:num.sc, .runScenario, params = params, fsc.exec = fsc.exec)
   } else {
     cl <- strataG:::.setupClusters(num.cores)
     tryCatch({
       parallel::clusterEvalQ(cl, require(ebvSim))
-      parallel::clusterExport(cl, "params", environment())
-      parallel::parLapply(cl, 1:num.sc, .runScenario, params = params)
+      parallel::clusterExport(cl, c("params", "fsc.exec"), environment())
+      parallel::parLapply(cl, 1:num.sc, .runScenario, params = params, fsc.exec = fsc.exec)
     }, finally = parallel::stopCluster(cl))
   }
   
-  save(params, file = paste0(params$label, "_params.rdata"))
+  save(params, file = paste0(params$label, "_ws.rdata"))
   invisible(params)
 }
 
 #' @noRd
 #' 
-.runScenario <- function(sc.i, params) {
+.runScenario <- function(sc.i, params, fsc.exec) {
   num.sc <- nrow(params$scenarios)
   sc <- params$scenarios[sc.i, ]
   cat(
@@ -59,14 +60,14 @@ runEBVsim <- function(params, num.cores) {
     )
   )
   
-  label <- paste0(params$label, "_sc.", sc$scenario)
   p <- runFscSim(
-    label = label, 
+    label = paste0(params$label, "_sc.", sc$scenario), 
     sc = sc, 
     genetics = params$genetics,
     ploidy = params$ploidy, 
     num.rep = params$num.rep,
-    use.wd = params$use.wd
+    use.wd = params$use.wd,
+    fsc.exec = fsc.exec
   )
   
   files <- sapply(1:params$num.rep, function(sim.i) {
@@ -80,7 +81,7 @@ runEBVsim <- function(params, num.cores) {
         strataG::as.data.frame()
     }
     
-    fname <- repFname(label, sc$scenario, sim.i)
+    fname <- repFname(params$label, sc$scenario, sim.i)
     out.name <- file.path(params$folders$out, fname)
     utils::write.csv(gen.data, file = out.name, row.names = FALSE)
     if(!is.null(params$rep.id)) {
@@ -94,6 +95,6 @@ runEBVsim <- function(params, num.cores) {
     out.name
   })
   
-  if(params$delete.fsc.files) strataG::fscCleanup(label, p$folder)
+  if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
   list(fsc.p = p, files = files)
 }

@@ -2,7 +2,8 @@ rm(list = ls())
 library(tidyverse)
 library(ebvSim)
 
-label <- "ebvSim.snps_test_1"
+load("ebvSim.snps_test_ws.rdata")
+label <- params$label
 
 ne <- analyzeReps("ldNe", label)
 g2 <- analyzeReps("g2", label)

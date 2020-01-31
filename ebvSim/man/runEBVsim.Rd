@@ -4,13 +4,15 @@
 \alias{runEBVsim}
 \title{Run EBV Simulations}
 \usage{
-runEBVsim(params, num.cores)
+runEBVsim(params, num.cores, fsc.exec = "fsc26")
 }
 \arguments{
 \item{params}{list of parameters for scenario runs. See \code{Details} for 
 description of format.}
 
 \item{num.cores}{number of cores to use.}
+
+\item{fsc.exec}{name of fastsimcoal executable.}
 }
 \value{
 vector of folders where scenario data and replicates were written.

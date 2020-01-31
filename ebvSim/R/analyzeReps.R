@@ -19,9 +19,12 @@ analyzeReps <- function(analysis, label) {
     het = calc_heterozygosity,
     froh = calc_froh
   )
-  num.rep <- scenarios <- NULL
+  params <- NULL
   load(paste0(label, "_ws.rdata"))
-  replicates <- expand.grid(scenario = 1:nrow(scenarios), replicate = 1:num.rep)
+  replicates <- expand.grid(
+    scenario = 1:nrow(params$scenarios), 
+    replicate = 1:params$num.rep
+  )
   n <- nrow(replicates)
   purrr::map(1:n, function(i) {
     cat(i, "/", n, "\n")
