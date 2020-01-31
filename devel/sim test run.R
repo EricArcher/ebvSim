@@ -11,28 +11,25 @@ rm(list = ls())
 library(ebvSim)
 library(strataG)
 
-label <- "ebvSim.snps_test_1"
-num.rep <- 3
-google.drive.id <- "1TGI2TVFnOAx0ib1GdBaL80Pwq-7ruqG1"
-
-# set scenarios
-scenarios <- makeScenarios(
-  num.pops = c(1, 5),
-  Ne = c(100, 1000),
-  num.samples = c(10, 100),
-  mig.rate = 1e-5,
-  mig.type = "island",
-  dvgnc.time = 200
+params <- list(
+  label = "ebvSim.snps_test",
+  scenarios = makeScenarios(
+    num.pops = c(1, 5),
+    Ne = c(100, 1000),
+    num.samples = c(10, 100),
+    mig.rate = 1e-5,
+    mig.type = "island",
+    dvgnc.time = 100
+  ),
+  genetics =  fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000),
+  num.rep = 10,
+  google.drive.id = NULL,
+  run.rmetasim = TRUE,
+  delete.fsc.files = TRUE,
+  use.wd = FALSE
 )
 
-# run fastsimcoal2
-out.dir <- runEBVsim(
-  label = label,
-  scenarios = scenarios,
-  genetics = fscSettingsGenetics(fscBlock_snp(1, 1e-4), num.chrom = 1000),
-  num.rep = num.rep,
-  google.drive.id = NULL, #google.drive.id,
-  run.rmetasim = TRUE
-)
+output <- runEBVsim(params, num.cores = 4)
 
-source("analysis test.R")
+#source("analysis test.R")
+

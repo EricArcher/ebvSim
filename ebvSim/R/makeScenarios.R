@@ -10,6 +10,8 @@
 #'   populations is the same. "stepping.stone" = migration only occurs between 
 #'   neighboring populations. Metapopulation is ring shaped, not a linear chain.
 #' @param dvgnc.time number of generations since divergence.
+#' @param rmetasim.ngen number of generations to run Rmetasim for. Set to 
+#'   \code{0} to skip Rmetasim.
 #' 
 #' @note Each parameter can be a single value or vector of values. Output will 
 #'   be all unique combinations of values.
@@ -22,7 +24,7 @@
 #'  
 makeScenarios <- function(num.pops, Ne, num.samples, mig.rate, 
                           mig.type = c("island", "stepping.stone"),
-                          dvgnc.time) {
+                          dvgnc.time, rmetasim.ngen = 0) {
   expand.grid(
     num.pops = num.pops,
     Ne = Ne,
@@ -30,8 +32,10 @@ makeScenarios <- function(num.pops, Ne, num.samples, mig.rate,
     mig.rate = mig.rate,
     mig.type = match.arg(mig.type),
     dvgnc.time = dvgnc.time,
+    rmetasim.ngen = rmetasim.ngen,
     stringsAsFactors = FALSE
   ) %>% 
+    dplyr::filter(.data$Ne >= .data$num.samples) %>% 
     dplyr::mutate(scenario = 1:dplyr::n()) %>% 
     dplyr::select(.data$scenario, dplyr::everything())
 }

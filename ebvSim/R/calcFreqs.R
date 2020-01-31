@@ -13,6 +13,7 @@
 #' @export
 #'    
 calcFreqs <- function(snps) {
+  if(ncol(snps) < 3) stop("no loci present")
   mac.df <- snps %>% 
     strataG::df2gtypes(ploidy = 2) %>% 
     strataG::as.data.frame(coded = T) %>% 

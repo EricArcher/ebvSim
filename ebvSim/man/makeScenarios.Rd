@@ -4,8 +4,15 @@
 \alias{makeScenarios}
 \title{Make Scenario Parameters}
 \usage{
-makeScenarios(num.pops, Ne, num.samples, mig.rate, mig.type = c("island",
-  "stepping.stone"), dvgnc.time)
+makeScenarios(
+  num.pops,
+  Ne,
+  num.samples,
+  mig.rate,
+  mig.type = c("island", "stepping.stone"),
+  dvgnc.time,
+  rmetasim.ngen = 0
+)
 }
 \arguments{
 \item{num.pops}{number of populations.}
@@ -22,6 +29,9 @@ populations is the same. "stepping.stone" = migration only occurs between
 neighboring populations. Metapopulation is ring shaped, not a linear chain.}
 
 \item{dvgnc.time}{number of generations since divergence.}
+
+\item{rmetasim.ngen}{number of generations to run Rmetasim for. Set to 
+\code{0} to skip Rmetasim.}
 }
 \value{
 data frame of scenario specifications.

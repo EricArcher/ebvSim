@@ -27,14 +27,21 @@ analyzeReps <- function(analysis, label) {
     cat(i, "/", n, "\n")
     sc <- replicates$scenario[i]
     rep <- replicates$replicate[i]
-    loadGenotypes(label, sc, rep) %>% 
-      analysis.func() %>% 
-      dplyr::mutate(
-        scenario = sc,
-        replicate = rep
-      ) %>% 
-      dplyr::select(.data$scenario, .data$replicate, .data$stratum, dplyr::everything())
-    
+    results <- loadGenotypes(label, sc, rep) %>% 
+      analysis.func() 
+    if(!is.null(results)) {
+      results %>% 
+        dplyr::mutate(
+          scenario = sc,
+          replicate = rep
+        ) %>% 
+        dplyr::select(
+          .data$scenario, 
+          .data$replicate, 
+          .data$stratum, 
+          dplyr::everything()
+        )
+    } else NULL
   }) %>% 
     dplyr::bind_rows() %>% 
     dplyr::arrange(.data$scenario, .data$replicate, .data$stratum)
