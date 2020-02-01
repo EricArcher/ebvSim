@@ -4,6 +4,8 @@
 
 *ebvSim* is a package for simulating SNP data and testing the performance of various genetic diversity metrics.
 
+***
+
 ### Installation
 
 1\. Download and install [fastsimcoal](http://cmpg.unibe.ch/software/fastsimcoal2) so that it can be executed on the command line from any location. This requires it to be in a folder that is somewhere in the execution PATH. The test is to try to execute fastsimcoal (`fsc26`) from any folder. Here are sites with guidance for setting the path for different operating systems:
@@ -17,6 +19,8 @@ On Mac OS or LINUX/UNIX systems, executables can be placed in the _/usr/local/bi
 ```r
 devtools::install_github("ericarcher/ebvSim", dependencies = TRUE)
 ```
+
+***
 
 ### Create simulation scenarios
 
@@ -46,6 +50,8 @@ scenarios <- makeScenarios(
   rmetasim.ngen = 10
 )
 ```
+
+***
 
 ### Run the simulations
 
@@ -91,13 +97,15 @@ The parameters for `runEBVsim()` are:
 * __num.rep__: the number of replicates to simulate for each scenario.
 * __num.cores__: the number of cores to use. replicates for each scenario are assigned to one core. If this is set to a value greater than 1, progress notifications will not be printed on the console.
 
-When the function is complete, there will be three new things in the working directory:
+When the simulations are complete, there will be three new items in the working directory:
 
 * \<label\>_scenario.replicates: a folder containig .csv files of genotypes for each scenario replicate.
 * \<label\>_scenarios.csv: a .csv file of the scenario specifications.
 * \<label\>_params.rdata: an R workspace file containing a a list called `params` that contains the parameters used to to run the scenarios and an element called `$scenario.runs` which is a list of the fastsimcoal output (`$fsc.p`) and genotype files output for each replicate (`$files`). This file will be written when the simulation is complete.
 
 The `runEBVsim()` function also invisibly returns the same summary list contained in __<label>_params.rdata__. 
+
+***
 
 ### Analyze the replicates
 
