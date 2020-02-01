@@ -19,7 +19,9 @@ calc_froh <- function(x) {
   snp.hf$id <- NULL
   
   # Write .ped and .map files
-  ped.label <- file.path(tempdir(), "testhierf")
+  
+  #ped.label <- file.path(tempdir(), "testhierf")
+  ped.label <- tempfile()
   hierfstat::write.ped(snp.hf, ilab = ids, fname = ped.label)
   
   # Change separator of .ped file to space for detectRUNS

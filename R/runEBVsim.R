@@ -57,7 +57,16 @@ runEBVsim <- function(label, scenarios, genetics, ploidy, num.rep,
   
   num.sc <- nrow(params$scenarios)
   params$scenario.runs <- if(num.cores == 1) {  
-    lapply(1:num.sc, .runScenario, params = params)
+    lapply(1:num.sc, function(sc.i) {  
+      cat(paste0(
+        format(Sys.time()), 
+        " ---- Scenario #", 
+        params$scenarios$scenario[sc.i], 
+        " (", sc.i, " / ", num.sc , 
+        ") ----\n"
+      ))
+      .runScenario(sc.i, params = params)
+    })
   } else {
     cl <- strataG:::.setupClusters(num.cores)
     tryCatch({
@@ -67,36 +76,27 @@ runEBVsim <- function(label, scenarios, genetics, ploidy, num.rep,
     }, finally = parallel::stopCluster(cl))
   }
   
-  save(params, file = paste0(params$label, "_ws.rdata"))
+  save(params, file = paste0(params$label, "_params.rdata"))
   invisible(params)
 }
 
 #' @noRd
 #' 
 .runScenario <- function(sc.i, params) {
-  sc <- params$scenarios
-  num.sc <- nrow(sc)
-  cat(
-    format(Sys.time()), 
-    paste0(
-      "---- Scenario #", sc$scenario, " (", sc.i, " / ", num.sc , ") ----\n"
-    )
-  )
-  
   p <- .runFscSim(params, sc.i)
   
   files <- sapply(1:params$num.rep, function(sim.i) {
     gen.data <- strataG::fscReadArp(p, sim = c(1, sim.i))
-    if(sc[sc.i, "rmetasim.ngen"] > 0) {
+    if(params$scenarios$rmetasim.ngen[sc.i] > 0) {
       gen.data <- gen.data %>% 
         calcFreqs() %>% 
-        .runRmetasim(sc[sc.i, ]) %>% 
+        .runRmetasim(params$scenarios[sc.i, ]) %>% 
         rmetasim::landscape.make.genind() %>% 
         strataG::genind2gtypes() %>% 
         strataG::as.data.frame()
     }
     
-    fname <- repFname(params$label, params$scenarios[sc.i, "scenario"], sim.i)
+    fname <- repFname(params$label, params$scenarios$scenario[sc.i], sim.i)
     out.name <- file.path(params$folders$out, fname)
     utils::write.csv(gen.data, file = out.name, row.names = FALSE)
     if(!is.null(params$rep.id)) {

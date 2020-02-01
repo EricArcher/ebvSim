@@ -4,13 +4,15 @@
 \alias{analyzeReps}
 \title{Analyze Replicates}
 \usage{
-analyzeReps(analysis, label)
+analyzeReps(analysis, params, num.cores = 1)
 }
 \arguments{
 \item{analysis}{character vector of EBV analysis to run (`ldNe`, `g2`, 
 `het`, or `froh`).}
 
-\item{label}{label of simulation run.}
+\item{params}{parameter list output from \code{runEBVsim()}.}
+
+\item{num.cores}{number of cores to use to split replicate analyses among.}
 }
 \value{
 data frame of summary metrics
