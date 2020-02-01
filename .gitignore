@@ -5,4 +5,4 @@
 *.Rproj
 .DS_Store
 .httr-oauth
-devel\*
+devel/*
