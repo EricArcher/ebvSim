@@ -2,23 +2,30 @@
 
 ### Description
 
-*ebvSim* is a package for simulating SNP data and testing the performance of various genetic diversity metrics.
+*ebvSim* is a package for simulating SNP data and testing the performance of various genetic diversity metrics. The package will simulate replicate data for multiple scenarios. It is a wrapper that the coalescent simulator *fastsimcoal2* through the *strataG* package, and then runs a few generations of a forward simulator, *rmetasim*, initialized with allele frequencies from the genotypes output by *fastsimcoal2*.
 
 ***
 
 ### Installation
 
-1\. Download and install [fastsimcoal](http://cmpg.unibe.ch/software/fastsimcoal2) so that it can be executed on the command line from any location. This requires it to be in a folder that is somewhere in the execution PATH. The test is to try to execute fastsimcoal (`fsc26`) from any folder. Here are sites with guidance for setting the path for different operating systems:
+1\. Download and install  [fastsimcoal2](http://cmpg.unibe.ch/software/fastsimcoal2) so that it can be executed on the command line from any location. This requires it to be in a folder that is somewhere in the execution PATH. The test is to try to execute fastsimcoal (`fsc26`) from any folder. Here are sites with guidance for setting the path for different operating systems:
 [Windows](https://www.java.com/en/download/help/path.xml), 
 [Mac OSX](http://osxdaily.com/2014/08/14/add-new-path-to-path-command-line/), or 
-[LINUX](http://www.wikihow.com/Change-the-Path-Variable-in-Linux).  
-On Mac OS or LINUX/UNIX systems, executables can be placed in the _/usr/local/bin_ folder which is usually a default in the PATH.
+[LINUX](http://www.wikihow.com/Change-the-Path-Variable-in-Linux). On Mac OS or LINUX/UNIX systems, executables can be placed in the _/usr/local/bin_ folder which is usually a default in the PATH.
 
 2\. Install the `ebvSim` package from GitHub with: 
 
 ```r
 devtools::install_github("ericarcher/ebvSim", dependencies = TRUE)
 ```
+This *should* also install *strataG* and *rmetasim* from their GitHub repositories. If these packages are not available after the *ebvSim* installation, install them from:
+
+```r
+devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
+devtools::install_github("stranda/rmetasim", dependencies = TRUE)
+```
+
+3\. By default, *rmetasim* can only simulate a maximum of 1001 loci. If this needs to be increased, it can be done so by changing this constant and recompiling. Instructions for this can be found [here](https://thierrygosselin.github.io/grur/articles/rad_genomics_computer_setup.html#rmetasim).
 
 ***
 
@@ -34,12 +41,12 @@ A data frame of scenarios must first be created. The data frame should have the 
 * __dvgnc.time__: the number of generations since divergence of the populations.
 * __rmetasim.ngen__: the number of generations to run Rmetasim for. Set to 0 to skip Rmetasim.
 
-This data frame can be created in R or read from a .csv file. If you want to create a data frame of all combinatons of vectors of parameters, you can use the function `makeScenarios()`:
+This data frame can be created in an R script or read from an external file. If you want to create a data frame of all combinatons of vectors of parameters, you can use the function `makeScenarios()`:
 
 ```r
 library(ebvSim)
 
-# creates six scenarios
+# creates six scenarios of all listed combinations of number of populations and effective populations size
 scenarios <- makeScenarios(
   num.pops = c(1, 3, 5),
   Ne = c(10, 100),
@@ -93,7 +100,7 @@ The parameters for `runEBVsim()` are:
 * __label__: text to use to label this set of of scenarios.
 * __scenarios__: the scenarios data frame previously created.
 * __genetics__: specification for the genetic marker to be simulated. This should be the output of the `fscSettingsGenetics()` function from the _strataG_ package. This function takes the output of a function like `fscBlock_snp()` to simulate SNP loci.
-* __ploidy__: give the ploidy of the markers. Set to 2 for diploid.
+* __ploidy__: the ploidy of the markers to be simulated. Set to 2 for diploid.
 * __num.rep__: the number of replicates to simulate for each scenario.
 * __num.cores__: the number of cores to use. replicates for each scenario are assigned to one core. If this is set to a value greater than 1, progress notifications will not be printed on the console.
 
@@ -103,13 +110,13 @@ When the simulations are complete, there will be three new items in the working 
 * \<label\>_scenarios.csv: a .csv file of the scenario specifications.
 * \<label\>_params.rdata: an R workspace file containing a a list called `params` that contains the parameters used to to run the scenarios and an element called `$scenario.runs` which is a list of the fastsimcoal output (`$fsc.p`) and genotype files output for each replicate (`$files`). This file will be written when the simulation is complete.
 
-The `runEBVsim()` function also invisibly returns the same summary list contained in __<label>_params.rdata__. 
+The `runEBVsim()` function also invisibly returns the same summary list contained in \<label\>_params.rdata. 
 
 ***
 
 ### Analyze the replicates
 
-Sets of scenarios can be analyzed with the `analyzeReps()` function. The `params` list of the run needs to be provided which can be found in the saved workspace file. Note that the folder containing the scenario replicate genotype .csv files must also be in the current working directory.
+Sets of scenarios can be analyzed with the `analyzeReps()` function. The `params` list saved or returned by `runEBVsim()` needs to be provided which can be found in the saved workspace file. Note that the folder containing the scenario replicate genotype .csv files must also be in the current working directory.
 
 Each analysis is run separately, by providing the name of the desired analysis as the first argument to `analyzeReps()`. Current options are `ldNe` (linkage disequilibrium effective population size), `g2` (inbreeding g2), `het` (observed heterozygosity), `froh` (runs of homozygosity).
 
@@ -132,10 +139,11 @@ All results from each `analyzeReps()` analysis can then be combined by joining t
 
 ```r
 library(tidyverse)
+join.by <- c("scenario", "replicate", "stratum")
 all.ebvs <- ne %>% 
-  left_join(g2, by = c("scenario", "replicate", "stratum")) %>% 
-  left_join(het, by = c("scenario", "replicate", "stratum")) %>% 
-  left_join(froh, by = c("scenario", "replicate", "stratum"))
+  left_join(g2, by = join.by) %>% 
+  left_join(het, by = join.by) %>% 
+  left_join(froh, by = join.by)
   
 # save results to workspace file
 save.image(paste0(params$label, "_analysis results.rdata"))
