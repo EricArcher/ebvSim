@@ -1,6 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^devel/*
+^devel\*
 ^README\.Rmd$
 ^README-.*\.png$
 ^NEWS\.Rmd$
@@ -10,4 +10,3 @@ tar.gz$
 ^\.travis\.yml$
 ^appveyor\.yml$
 .DS_Store
-.httr-oauth

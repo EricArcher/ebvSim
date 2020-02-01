@@ -8,3 +8,18 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## Installation
+1\. Download and install `fastsimcoal` (http://cmpg.unibe.ch/software/fastsimcoal2/) so that it can be executed on the command line from any location. This requires it to be in a folder that is somewhere in the execution PATH. The test is to try to execute fastsimcoal (`fsc26`) from any folder. Here are sites with guidance for setting the path for different operating systems:
+[Windows](https://www.java.com/en/download/help/path.xml)
+[Mac OSX](http://osxdaily.com/2014/08/14/add-new-path-to-path-command-line/)
+[LINUX](http://www.wikihow.com/Change-the-Path-Variable-in-Linux).  
+On Mac OS or LINUX/UNIX systems, executables can be placed in the _/usr/local/bin_ folder which is usually a default in the PATH.
+
+2\. Install the `ebvSim` package from GitHub with: 
+
+`devtools::install_github("ericarcher/ebvSim", dependencies = TRUE)`
+
+***
+
+## Initialization

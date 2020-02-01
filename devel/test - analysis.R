@@ -14,5 +14,3 @@ all.ebvs <- ne %>%
   left_join(g2, by = c("scenario", "replicate", "stratum")) %>% 
   left_join(het, by = c("scenario", "replicate", "stratum")) %>% 
   left_join(froh, by = c("scenario", "replicate", "stratum"))
-
-

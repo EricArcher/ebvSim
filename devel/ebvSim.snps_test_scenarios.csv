@@ -1,0 +1,2 @@
+"scenario","num.pops","Ne","num.samples","mig.rate","mig.type","dvgnc.time","rmetasim.ngen"
+1,3,100,10,1e-05,"island",100,10
