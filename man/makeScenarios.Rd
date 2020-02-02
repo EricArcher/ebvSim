@@ -9,9 +9,13 @@ makeScenarios(
   Ne,
   num.samples,
   mig.rate,
-  mig.type = c("island", "stepping.stone"),
+  mig.type,
   dvgnc.time,
-  rmetasim.ngen = 0
+  marker.type,
+  mut.rate,
+  num.loci,
+  ploidy,
+  rmetasim.ngen
 )
 }
 \arguments{
@@ -30,6 +34,15 @@ neighboring populations. Metapopulation is ring shaped, not a linear chain.}
 
 \item{dvgnc.time}{number of generations since divergence.}
 
+\item{marker.type}{type of marker to simulate ("snp").}
+
+\item{mut.rate}{mutation rate of marker in units of # of mutations per 
+generation.}
+
+\item{num.loci}{number of independent loci.}
+
+\item{ploidy}{ploidy of marker. Set to 2 for diploid.}
+
 \item{rmetasim.ngen}{number of generations to run Rmetasim for. Set to 
 \code{0} to skip Rmetasim.}
 }
@@ -41,7 +54,9 @@ Create data frame of scenario parameters.
 }
 \note{
 Each parameter can be a single value or vector of values. Output will 
-  be all unique combinations of values.
+  be all unique combinations of values, with the following exceptions. 
+  Scenarios wth \code{num.samples} > \code{Ne} are deleted. Scenarios with
+  \code{num.pops = 1} will have \code{mig.rate} set to NA.
 }
 \author{
 Eric Archer \email{eric.archer@noaa.gov}

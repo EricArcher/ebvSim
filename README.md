@@ -39,6 +39,10 @@ A data frame of scenarios must first be created. The data frame should have the 
 * __mig.rate__: the migration rate specified as proportion of population migrating per generaton.
 * __mig.type__: the type of of migration matrix structure. "island" = rate between all populations is the same. "stepping.stone" = migration only occurs between neighboring populations. Metapopulation is ring shaped, not a linear chain.
 * __dvgnc.time__: the number of generations since divergence of the populations.
+* __marker.type__: type of marker to simulate. At this point, only "snp" is available.
+* __mut.rate__: mutation rate (# of mutations per generation) of the markers to simulate.
+* __num.loci__: number of independent loci to simulate.
+* __ploidy__: the ploidy of the markers to be simulated. Set to 2 for diploid.
 * __rmetasim.ngen__: the number of generations to run Rmetasim for. Set to 0 to skip Rmetasim.
 
 This data frame can be created in an R script or read from an external file. If you want to create a data frame of all combinatons of vectors of parameters, you can use the function `makeScenarios()`:
@@ -53,7 +57,11 @@ scenarios <- makeScenarios(
   num.samples = 10,
   mig.rate = 1e-5,
   mig.type = "island",
-  dvgnc.time = 100, 
+  dvgnc.time = 100,   
+  marker.type = "snp",
+  mut.rate = 1e-4,
+  num.loci = 1000,
+  ploidy = 2,
   rmetasim.ngen = 10
 )
 ```
@@ -67,29 +75,9 @@ With the scenarios specified, the simulation can be run with the `runEBVsim()` f
 ```r
 library(ebvSim)
 
-# a single scenario
-scenarios <- data.frame(
-  num.pops = 2,
-  Ne = 100,
-  num.samples = 10,
-  mig.rate = 1e-5,
-  mig.type = "island",
-  dvgnc.time = 100, 
-  rmetasim.ngen = 10
-)
-
-genetics <- strataG::fscSettingsGenetics(
-  strataG::fscBlock_snp(
-    sequence.length = 1, mut.rate = 1e-4
-  ), 
-  num.chrom = 1000
-)
-
 params <- runEBVsim(
   label = "ebvSim.snps_test",
   scenarios = scenarios,
-  genetics = genetics,
-  ploidy = 2,
   num.rep = 10,
   num.cores = 4
 )
@@ -99,8 +87,6 @@ The parameters for `runEBVsim()` are:
 
 * __label__: text to use to label this set of of scenarios.
 * __scenarios__: the scenarios data frame previously created.
-* __genetics__: specification for the genetic marker to be simulated. This should be the output of the `fscSettingsGenetics()` function from the _strataG_ package. This function takes the output of a function like `fscBlock_snp()` to simulate SNP loci.
-* __ploidy__: the ploidy of the markers to be simulated. Set to 2 for diploid.
 * __num.rep__: the number of replicates to simulate for each scenario.
 * __num.cores__: the number of cores to use. replicates for each scenario are assigned to one core. If this is set to a value greater than 1, progress notifications will not be printed on the console.
 

@@ -4,9 +4,6 @@
 #' @param label label used for output files and folders for the run.
 #' @param scenarios data.frame where each row provides different parameters for 
 #'   each scenario. See \code{Details} for more information on its structure.
-#' @param genetics specification of genetic data to be simulated. Should be 
-#'   object returned by \code{\link[strataG]{fscSettingsGenetics}}.
-#' @param ploidy number specifying the ploidy of the genetic markers.
 #' @param num.rep number of replicates to run for each scenario.
 #' @param google.drive.id id of root Google Drive to save run to.
 #' @param delete.fsc.files delete fastsimcoal files when the run is complete?
@@ -34,14 +31,12 @@
 #' 
 #' @export
 #'  
-runEBVsim <- function(label, scenarios, genetics, ploidy, num.rep,
+runEBVsim <- function(label, scenarios, num.rep,
                       google.drive.id = NULL, delete.fsc.files = TRUE,
                       use.wd = FALSE, num.cores = 1, fsc.exec = "fsc26") {
   params <- list(
     label = label,
     scenarios = scenarios,
-    genetics = genetics,
-    ploidy = ploidy,
     num.rep = num.rep,
     google.drive.id = google.drive.id,
     delete.fsc.files = delete.fsc.files,

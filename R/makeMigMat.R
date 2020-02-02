@@ -17,6 +17,7 @@
 #'  
 makeMigMat <- function(mig.rate, num.pops, 
                        type = c("island", "stepping.stone")) {
+  if(is.na(mig.rate)) return(NULL)
   type <- match.arg(type)
   mig.mat <- switch(
     type,      

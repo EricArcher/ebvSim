@@ -7,8 +7,6 @@
 runEBVsim(
   label,
   scenarios,
-  genetics,
-  ploidy,
   num.rep,
   google.drive.id = NULL,
   delete.fsc.files = TRUE,
@@ -22,11 +20,6 @@ runEBVsim(
 
 \item{scenarios}{data.frame where each row provides different parameters for 
 each scenario. See \code{Details} for more information on its structure.}
-
-\item{genetics}{specification of genetic data to be simulated. Should be 
-object returned by \code{\link[strataG]{fscSettingsGenetics}}.}
-
-\item{ploidy}{number specifying the ploidy of the genetic markers.}
 
 \item{num.rep}{number of replicates to run for each scenario.}
 

@@ -6,7 +6,15 @@
   deme.list <- lapply(1:sc$num.pops, function(i) {
     strataG::fscDeme(deme.size = sc$Ne, sample.size = sc$num.samples)
   })
-  deme.list$ploidy <- params$ploidy
+  deme.list$ploidy <- sc$ploidy
+  
+  genetics <- switch(
+    sc$marker.type,
+    snp = strataG::fscSettingsGenetics(
+      strataG::fscBlock_snp(1, sc$mut.rate), 
+      num.chrom = sc$num.loci
+    )
+  )
   
   strataG::fscWrite(
     demes = do.call(strataG::fscSettingsDemes, deme.list),
@@ -15,7 +23,7 @@
       strataG::fscSettingsMigration(mig.mat)
     } else NULL,
     events = makeEventSettings(sc$dvgnc.time, sc$num.pops),
-    genetics = params$genetics,
+    genetics = genetics,
     label = params$label,
     use.wd = params$use.wd
   ) %>% 
@@ -36,16 +44,22 @@
   localM <- matrix(c(0, 0, 0, 1), nrow = 2, ncol = 2)
   S <- M <- matrix(0, nrow = sc$num.pops * 2, ncol = sc$num.pops * 2)
   diag(S) <- diag(M) <- 1
-  R <- rmetasim::landscape.mig.matrix(
-    h = nrow(sc$mig.mat), 
-    s = 2, 
-    mig.model = "custom", 
-    R.custom = makeMigMat(sc$mig.rate, sc$num.pops, sc$mig.type)
-  )$R
+  R <- if(sc$num.pops == 1) NULL else {
+    rmetasim::landscape.mig.matrix(
+      h = sc$num.pops, 
+      s = 2, 
+      mig.model = "custom", 
+      R.custom = makeMigMat(sc$mig.rate, sc$num.pops, sc$mig.type)
+    )$R
+  }
   
   Rland <- rmetasim::landscape.new.empty() %>% 
     rmetasim::landscape.new.intparam(
-      h = sc$num.pops, s = 2, cg = 0, ce = 0, totgen = sc$rmetasim.ngen + 1
+      h = sc$num.pops, 
+      s = 2, 
+      cg = 0, 
+      ce = 0, 
+      totgen = sc$rmetasim.ngen + 1
     ) %>% 
     rmetasim::landscape.new.switchparam() %>% 
     rmetasim::landscape.new.floatparam() %>% 
@@ -54,7 +68,7 @@
   
   for(i in 1:length(freqs$global)) {
     Rland <- rmetasim::landscape.new.locus(
-      Rland, type = 2, ploidy = 2, mutationrate = 0,
+      Rland, type = 2, ploidy = sc$ploidy, mutationrate = 0,
       transmission = 0, numalleles = 2, allelesize = 1,
       frequencies = freqs$global[[i]], states = names(freqs$global[[i]])
     )
