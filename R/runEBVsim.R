@@ -55,12 +55,12 @@ runEBVsim <- function(label, scenarios, num.rep,
     lapply(1:num.sc, function(sc.i) {  
       cat(paste0(
         format(Sys.time()), 
-        " ---- Scenario #", 
+        " ---- Scenario ", 
         params$scenarios$scenario[sc.i], 
         " (", sc.i, " / ", num.sc , 
         ") ----\n"
       ))
-      .runScenario(sc.i, params = params)
+      .runScenario(sc.i, params = params, quiet = FALSE)
     })
   } else {
     cl <- strataG:::.setupClusters(num.cores)
@@ -77,17 +77,22 @@ runEBVsim <- function(label, scenarios, num.rep,
 
 #' @noRd
 #' 
-.runScenario <- function(sc.i, params) {
+.runScenario <- function(sc.i, params, quiet = TRUE) {
   p <- .runFscSim(params, sc.i)
   
   files <- sapply(1:params$num.rep, function(sim.i) {
+    if(!quiet) {
+      cat(paste0(
+        format(Sys.time()),
+        " *** Replicate ", sim.i, " / ", params$num.rep, "***\n"
+      ))
+    }
     gen.data <- strataG::fscReadArp(p, sim = c(1, sim.i))
     if(params$scenarios$rmetasim.ngen[sc.i] > 0) {
       gen.data <- gen.data %>% 
         calcFreqs() %>% 
         .runRmetasim(params$scenarios[sc.i, ]) %>% 
-        rmetasim::landscape.make.genind() %>% 
-        strataG::genind2gtypes() %>% 
+        strataG::landscape2gtypes() %>% 
         strataG::as.data.frame()
     }
     
