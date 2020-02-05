@@ -9,7 +9,7 @@
   deme.list$ploidy <- sc$ploidy
   
   genetics <- switch(
-    sc$marker.type,
+    as.character(sc$marker.type),
     snp = strataG::fscSettingsGenetics(
       strataG::fscBlock_snp(1, sc$mut.rate), 
       num.chrom = sc$num.loci

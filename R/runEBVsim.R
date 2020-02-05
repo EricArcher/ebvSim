@@ -34,6 +34,22 @@
 runEBVsim <- function(label, scenarios, num.rep,
                       google.drive.id = NULL, delete.fsc.files = TRUE,
                       use.wd = FALSE, num.cores = 1, fsc.exec = "fsc26") {
+  
+  if(!all(c("num.pops", "Ne", "num.samples", "mig.rate", "mut.rate",
+            "num.loci", "ploidy", "rmetasim.ngen", "mig.type",
+            "marker.type") %in% colnames(scenarios))) {
+    stop("'scenarios' is missing some required columns")
+  }
+  for(x in colnames(scenarios)) {
+    if(x %in% c("mig.type", "marker.type")) {
+      scenarios[[x]] <- tolower(as.character(scenarios[[x]]))
+    }
+    if(x %in% c("num.pops", "Ne", "num.samples", "mig.rate", "mut.rate", 
+                "num.loci", "ploidy", "rmetasim.ngen")) {
+      scenarios[[x]] <- as.numeric(scenarios[[x]])
+    }
+  }
+  
   params <- list(
     label = label,
     scenarios = scenarios,
