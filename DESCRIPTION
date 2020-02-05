@@ -22,7 +22,7 @@ Imports:
   utils
 Remotes:
   stranda/rmetasim,
-  ericarcher/stratag@redevel2018
+  ericarcher/strataG
 License: GNU General Public License
 RoxygenNote: 7.0.2
 Encoding: UTF-8
