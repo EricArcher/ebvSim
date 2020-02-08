@@ -66,25 +66,29 @@ runEBVsim <- function(label, scenarios, num.rep,
     googledrive::as_id(params$folders$google) 
   } else NULL
   
-  num.sc <- nrow(params$scenarios)
+  params$rep.df <- expand.grid( 
+    rep = 1:params$num.rep, 
+    sc = 1:nrow(params$scenarios),
+    stringsAsFactors = FALSE
+  )
+  
+  params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
+  
+  sc.rep.vec <- 1:nrow(params$rep.df)
   params$scenario.runs <- if(num.cores == 1) {  
-    lapply(1:num.sc, function(sc.i) {  
-      cat(paste0(
-        format(Sys.time()), 
-        " ---- Scenario ", 
-        params$scenarios$scenario[sc.i], 
-        " (", sc.i, " / ", num.sc , 
-        ") ----\n"
-      ))
-      .runScenario(sc.i, params = params, quiet = FALSE)
-    })
+    tryCatch({
+      lapply(sc.rep.vec, function(rep.i) {  
+        .labelRep(rep.i, params)
+        .runScRep(rep.i, params, FALSE)
+      })
+    }, error = .repError)
   } else {
     cl <- strataG:::.setupClusters(num.cores)
     tryCatch({
       parallel::clusterEvalQ(cl, require(ebvSim))
       parallel::clusterExport(cl, "params", environment())
-      parallel::parLapply(cl, 1:num.sc, .runScenario, params = params)
-    }, finally = parallel::stopCluster(cl))
+      parallel::parLapply(cl, sc.rep.vec, .runScRep, params = params)
+    }, error = .repError, finally = parallel::stopCluster(cl))
   }
   
   save(params, file = paste0(params$label, "_params.rdata"))
@@ -93,39 +97,66 @@ runEBVsim <- function(label, scenarios, num.rep,
 
 #' @noRd
 #' 
-.runScenario <- function(sc.i, params, quiet = TRUE) {
-  p <- .runFscSim(params, sc.i)
+.repError <- function(e) {
+  stop(format(Sys.time()), " ", conditionMessage(e), call. = FALSE)
+}
+
+#' @noRd
+#' 
+.labelRep <- function(rep.i, params) {
+  cat(paste0(
+    format(Sys.time()), 
+    " ---- Scenario ", 
+    params$scenarios$scenario[params$rep.df$sc[rep.i]], 
+    ", Replicate ", 
+    params$rep.df$rep[rep.i],
+    " (", 
+    round(100 * rep.i / nrow(params$rep.df)), 
+    "%) ----\n"
+  ))
+}
+
+#' @noRd
+#' 
+.runScRep <- function(rep.i, params, quiet = TRUE) {
+  sc.num <- params$rep.df$sc[rep.i]
+  rep.num <- params$rep.df$rep[rep.i]
   
-  files <- sapply(1:params$num.rep, function(sim.i) {
-    if(!quiet) {
-      cat(paste0(
-        format(Sys.time()),
-        " *** Replicate ", sim.i, " / ", params$num.rep, "***\n"
-      ))
-    }
-    gen.data <- strataG::fscReadArp(p, sim = c(1, sim.i))
-    if(params$scenarios$rmetasim.ngen[sc.i] > 0) {
-      gen.data <- gen.data %>% 
-        calcFreqs() %>% 
-        .runRmetasim(params$scenarios[sc.i, ]) %>% 
-        strataG::landscape2gtypes() %>% 
-        strataG::as.data.frame()
-    }
-    
-    fname <- repFname(params$label, params$scenarios$scenario[sc.i], sim.i)
-    out.name <- file.path(params$folders$out, fname)
-    utils::write.csv(gen.data, file = out.name, row.names = FALSE)
-    if(!is.null(params$rep.id)) {
-      googledrive::drive_upload(
-        out.name, 
-        path = params$rep.id, 
-        name = fname, 
-        verbose = FALSE
+  tryCatch(
+    {
+      p <- .runFscSim(rep.i, params)
+      gen.data <- strataG::fscReadArp(p)
+      sc <- params$scenarios[sc.num, ]
+      if(sc$rmetasim.ngen > 0) {
+        if(!quiet) cat(format(Sys.time()), "running rmetasim...\n")
+        gen.data <- gen.data %>% 
+          calcFreqs() %>% 
+          .runRmetasim(Rland = params$Rland[[sc.num]], sc = sc) %>% 
+          strataG::landscape2gtypes() %>% 
+          strataG::as.data.frame()
+      }
+      
+      fname <- repFname(params$label, sc.num, rep.num)
+      out.name <- file.path(params$folders$out, fname)
+      utils::write.csv(gen.data, file = out.name, row.names = FALSE)
+      if(!is.null(params$rep.id)) {
+        googledrive::drive_upload(
+          out.name, 
+          path = params$rep.id, 
+          name = fname, 
+          verbose = FALSE
+        )
+      }
+      
+      if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
+      list(fsc.p = p, file = out.name)
+    },
+    error = function(e) {
+      paste0(
+        "Scenario ", params$scenarios$scenario[sc.num], 
+        ", Replicate ", rep.num, 
+        " : ", conditionMessage(e)
       )
     }
-    out.name
-  })
-  
-  if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
-  list(fsc.p = p, files = files)
+  )
 }
