@@ -76,19 +76,14 @@ runEBVsim <- function(label, scenarios, num.rep,
   
   sc.rep.vec <- 1:nrow(params$rep.df)
   params$scenario.runs <- if(num.cores == 1) {  
-    tryCatch({
-      lapply(sc.rep.vec, function(rep.i) {  
-        .labelRep(rep.i, params)
-        .runScRep(rep.i, params, FALSE)
-      })
-    }, error = .repError)
+    tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
   } else {
     cl <- strataG:::.setupClusters(num.cores)
     tryCatch({
       parallel::clusterEvalQ(cl, require(ebvSim))
       parallel::clusterExport(cl, "params", environment())
       parallel::parLapply(cl, sc.rep.vec, .runScRep, params = params)
-    }, error = .repError, finally = parallel::stopCluster(cl))
+    }, finally = parallel::stopCluster(cl))
   }
   
   save(params, file = paste0(params$label, "_params.rdata"))
@@ -97,28 +92,19 @@ runEBVsim <- function(label, scenarios, num.rep,
 
 #' @noRd
 #' 
-.repError <- function(e) {
-  stop(format(Sys.time()), " ", conditionMessage(e), call. = FALSE)
-}
-
-#' @noRd
-#' 
-.labelRep <- function(rep.i, params) {
+.runWithLabel <- function(rep.i, params) {
   cat(paste0(
     format(Sys.time()), 
-    " ---- Scenario ", 
-    params$scenarios$scenario[params$rep.df$sc[rep.i]], 
-    ", Replicate ", 
-    params$rep.df$rep[rep.i],
-    " (", 
-    round(100 * rep.i / nrow(params$rep.df)), 
-    "%) ----\n"
+    " ---- Scenario ", params$scenarios$scenario[params$rep.df$sc[rep.i]], 
+    ", Replicate ", params$rep.df$rep[rep.i],
+    " (", round(100 * rep.i / nrow(params$rep.df)), "%) ----\n"
   ))
+  .runScRep(rep.i, params)
 }
 
 #' @noRd
 #' 
-.runScRep <- function(rep.i, params, quiet = TRUE) {
+.runScRep <- function(rep.i, params) {
   sc.num <- params$rep.df$sc[rep.i]
   rep.num <- params$rep.df$rep[rep.i]
   
@@ -128,12 +114,11 @@ runEBVsim <- function(label, scenarios, num.rep,
       gen.data <- strataG::fscReadArp(p)
       sc <- params$scenarios[sc.num, ]
       if(sc$rmetasim.ngen > 0) {
-        if(!quiet) cat(format(Sys.time()), "running rmetasim...\n")
+        cat(format(Sys.time()), "running rmetasim...\n")
         gen.data <- gen.data %>% 
           calcFreqs() %>% 
           .runRmetasim(Rland = params$Rland[[sc.num]], sc = sc) %>% 
-          strataG::landscape2gtypes() %>% 
-          strataG::as.data.frame()
+          strataG::landscape2df()
       }
       
       fname <- repFname(params$label, sc.num, rep.num)
@@ -152,10 +137,11 @@ runEBVsim <- function(label, scenarios, num.rep,
       list(fsc.p = p, file = out.name)
     },
     error = function(e) {
-      paste0(
-        "Scenario ", params$scenarios$scenario[sc.num], 
+      stop(
+        format(Sys.time()),
+        " Scenario ", params$scenarios$scenario[sc.num],
         ", Replicate ", rep.num, 
-        " : ", conditionMessage(e)
+        ": ", e
       )
     }
   )

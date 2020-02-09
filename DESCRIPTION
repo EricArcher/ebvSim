@@ -21,8 +21,8 @@ Imports:
   tidyr,
   utils
 Remotes:
-  stranda/rmetasim,
-  ericarcher/strataG
+  github::stranda/rmetasim,
+  github::ericarcher/strataG
 License: GNU General Public License
 RoxygenNote: 7.0.2
 Encoding: UTF-8
