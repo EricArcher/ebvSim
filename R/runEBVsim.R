@@ -136,7 +136,7 @@ runEBVsim <- function(label, scenarios, num.rep,
           strataG::as.data.frame()
       }
       
-      fname <- repFname(params$label, sc.num, rep.num)
+      fname <- repFname(params$label, sc$scenario, rep.num)
       out.name <- file.path(params$folders$out, fname)
       utils::write.csv(gen.data, file = out.name, row.names = FALSE)
       if(!is.null(params$rep.id)) {
