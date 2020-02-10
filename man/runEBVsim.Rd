@@ -31,7 +31,7 @@ each scenario. See \code{Details} for more information on its structure.}
 \code{FALSE} (default), a temporary folder is used, which is deleted when 
 the R session is closed.}
 
-\item{num.cores}{number of cores to use. Each scenario is allocated to a 
+\item{num.cores}{number of cores to use. Each replciate is allocated to a 
 separate core. If set to 1, then progress is output to the console.}
 
 \item{fsc.exec}{name of fastsimcoal executable.}
