@@ -5,7 +5,7 @@
   sc <- params$scenarios[sc.i, ]
   
   deme.list <- lapply(1:sc$num.pops, function(i) {
-    strataG::fscDeme(deme.size = sc$Ne, sample.size = sc$num.samples)
+    strataG::fscDeme(deme.size = sc$Ne, sample.size = sc$Ne)
   })
   deme.list$ploidy <- sc$ploidy
   

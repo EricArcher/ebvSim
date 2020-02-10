@@ -121,6 +121,11 @@ runEBVsim <- function(label, scenarios, num.rep,
           strataG::landscape2df()
       }
       
+      to.keep <- unlist(tapply(
+        1:nrow(gen.data), gen.data$strata, sample, size = sc$num.samples
+      ))
+      gen.data <- gen.data[to.keep, ]
+      
       fname <- repFname(params$label, sc$scenario, rep.num)
       out.name <- file.path(params$folders$out, fname)
       utils::write.csv(gen.data, file = out.name, row.names = FALSE)
