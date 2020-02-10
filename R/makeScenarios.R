@@ -46,8 +46,14 @@ makeScenarios <- function(num.pops, Ne, num.samples, mig.rate, mig.type,
     rmetasim.ngen = rmetasim.ngen,
     stringsAsFactors = FALSE
   ) %>% 
-    dplyr::mutate(mig.rate = ifelse(.data$num.pops == 1, NA, .data$mig.rate)) %>% 
-    dplyr::filter(.data$Ne >= .data$num.samples) %>% 
+    dplyr::mutate(
+      mig.rate = ifelse(.data$num.pops == 1, NA, .data$mig.rate),
+      num.samples = ifelse(
+        is.na(.data$num.samples), 
+        NA, 
+        ifelse(.data$Ne >= .data$num.samples, NA, .data$num.samples)
+      )
+    ) %>% 
     dplyr::filter(!duplicated(.data)) %>% 
     dplyr::mutate(scenario = 1:dplyr::n()) %>% 
     dplyr::select(.data$scenario, dplyr::everything())

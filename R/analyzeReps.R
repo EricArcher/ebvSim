@@ -15,7 +15,7 @@
 analyzeReps <- function(analysis, params, num.cores = 1) {
     
   params$replicates <- expand.grid(
-    scenario = 1:nrow(params$scenarios), 
+    scenario = params$scenarios$scenario, 
     replicate = 1:params$num.rep
   )
   params$analysis.func <- switch(
@@ -39,7 +39,7 @@ analyzeReps <- function(analysis, params, num.cores = 1) {
     tryCatch({
       parallel::clusterEvalQ(cl, require(ebvSim))
       parallel::clusterExport(cl, "params", environment())
-      parallel::parLapply(cl, 1:n, .repAnalysis, p = params)
+      parallel::parLapplyLB(cl, 1:n, .repAnalysis, p = params)
     }, finally = parallel::stopCluster(cl))
   } 
 

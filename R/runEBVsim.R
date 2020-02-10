@@ -10,7 +10,7 @@
 #' @param use.wd use the working directory to save fastsimcoal files? If 
 #'   \code{FALSE} (default), a temporary folder is used, which is deleted when 
 #'   the R session is closed.
-#' @param num.cores number of cores to use. Each scenario is allocated to a 
+#' @param num.cores number of cores to use. Each replciate is allocated to a 
 #'   separate core. If set to 1, then progress is output to the console.
 #' @param fsc.exec name of fastsimcoal executable.
 #' 
@@ -75,6 +75,9 @@ runEBVsim <- function(label, scenarios, num.rep,
   params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
   
   sc.rep.vec <- 1:nrow(params$rep.df)
+  
+  start.time <- Sys.time()
+  cat(format(start.time), "Running", nrow(params$scenarios), "scenarios...\n")
   params$scenario.runs <- if(num.cores == 1) {  
     tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
   } else {
@@ -82,9 +85,11 @@ runEBVsim <- function(label, scenarios, num.rep,
     tryCatch({
       parallel::clusterEvalQ(cl, require(ebvSim))
       parallel::clusterExport(cl, "params", environment())
-      parallel::parLapply(cl, sc.rep.vec, .runScRep, params = params)
+      parallel::parLapplyLB(cl, sc.rep.vec, .runScRep, params = params)
     }, finally = parallel::stopCluster(cl))
   }
+  cat(format(Sys.time()), "Run complete!!\n")
+  cat("Total time:", format(round(difftime(Sys.time(), start.time), 2)), "\n")
   
   save(params, file = paste0(params$label, "_params.rdata"))
   invisible(params)
@@ -121,10 +126,13 @@ runEBVsim <- function(label, scenarios, num.rep,
           strataG::landscape2df()
       }
       
-      to.keep <- unlist(tapply(
-        1:nrow(gen.data), gen.data$strata, sample, size = sc$num.samples
-      ))
-      gen.data <- gen.data[to.keep, ]
+      if(!is.na(sc$num.samples)) {
+        to.keep <- tapply(1:nrow(gen.data), gen.data$strata, function(i) {
+          if(length(i) <= sc$num.samples) i else sample(i, sc$num.samples)
+        })
+        gen.data <- gen.data[unlist(to.keep), ]
+      }
+      gen.data$id <- 1:nrow(gen.data)
       
       fname <- repFname(params$label, sc$scenario, rep.num)
       out.name <- file.path(params$folders$out, fname)
