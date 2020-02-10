@@ -27,7 +27,7 @@ analyzeReps <- function(analysis, params, num.cores = 1) {
   )
   
   n <- nrow(params$replicates)
-  cat(format(Sys.time()), "Starting", analysis, "analysis of", n, "replicates...\n")
+  cat(format(Sys.time()), "Conducting", analysis, "analysis of", n, "replicates...\n")
   
   result <- if(num.cores == 1) {
     lapply(1:n, function(i, p = params) {
@@ -42,7 +42,7 @@ analyzeReps <- function(analysis, params, num.cores = 1) {
       parallel::parLapplyLB(cl, 1:n, .repAnalysis, p = params)
     }, finally = parallel::stopCluster(cl))
   } 
-
+  
   cat(format(Sys.time()), analysis, "analysis complete!\n")
   
   result %>% 
