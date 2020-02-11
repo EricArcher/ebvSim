@@ -79,7 +79,7 @@ runEBVsim <- function(label, scenarios, num.rep,
   start.time <- Sys.time()
   cat(format(start.time), "Running", nrow(params$scenarios), "scenarios...\n")
   print(params$scenarios[, c("scenario", "num.pops", "Ne", "num.samples", "mig.rate", "mig.type")])
-  params$scenario.runs <- if(num.cores == 1) {  
+  params$replicate.fnames <- if(num.cores == 1) {  
     tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
   } else {
     cl <- strataG:::.setupClusters(num.cores)
@@ -89,6 +89,7 @@ runEBVsim <- function(label, scenarios, num.rep,
       parallel::parLapplyLB(cl, sc.rep.vec, .runScRep, params = params)
     }, finally = parallel::stopCluster(cl))
   }
+  params$replicate.fnames <- unlist(params$replicate.fnames)
   cat(format(Sys.time()), "Run complete!!\n")
   cat("Total time:", format(round(difftime(Sys.time(), start.time), 2)), "\n")
   
@@ -149,7 +150,7 @@ runEBVsim <- function(label, scenarios, num.rep,
       }
       
       if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
-      list(fsc.p = p, file = out.name)
+      out.name
     },
     error = function(e) {
       stop(
