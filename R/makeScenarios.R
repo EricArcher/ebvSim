@@ -51,7 +51,7 @@ makeScenarios <- function(num.pops, Ne, num.samples, mig.rate, mig.type,
       num.samples = ifelse(
         is.na(.data$num.samples), 
         NA, 
-        ifelse(.data$Ne >= .data$num.samples, NA, .data$num.samples)
+        ifelse(.data$Ne <= .data$num.samples, NA, .data$num.samples)
       )
     ) %>% 
     dplyr::filter(!duplicated(.data)) %>% 

@@ -78,6 +78,7 @@ runEBVsim <- function(label, scenarios, num.rep,
   
   start.time <- Sys.time()
   cat(format(start.time), "Running", nrow(params$scenarios), "scenarios...\n")
+  print(params$scenarios[, c("scenario", "num.pops", "Ne", "num.samples", "mig.rate", "mig.type")])
   params$scenario.runs <- if(num.cores == 1) {  
     tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
   } else {
@@ -117,6 +118,7 @@ runEBVsim <- function(label, scenarios, num.rep,
     {
       p <- .runFscSim(rep.i, params)
       gen.data <- strataG::fscReadArp(p)
+      if(is.null(gen.data)) return(NULL)
       sc <- params$scenarios[sc.num, ]
       if(sc$rmetasim.ngen > 0) {
         cat(format(Sys.time()), "running rmetasim...\n")
