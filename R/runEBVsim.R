@@ -35,13 +35,13 @@ runEBVsim <- function(label, scenarios, num.rep,
                       google.drive.id = NULL, delete.fsc.files = TRUE,
                       use.wd = FALSE, num.cores = 1, fsc.exec = "fsc26") {
   
-  if(!all(c("num.pops", "Ne", "num.samples", "mig.rate", "mut.rate",
+  if(!all(c("scenario", "num.pops", "Ne", "num.samples", "mig.rate", "mut.rate",
             "num.loci", "ploidy", "rmetasim.ngen", "mig.type",
             "marker.type") %in% colnames(scenarios))) {
     stop("'scenarios' is missing some required columns")
   }
   for(x in colnames(scenarios)) {
-    if(x %in% c("mig.type", "marker.type")) {
+    if(x %in% c("scenario", "mig.type", "marker.type")) {
       scenarios[[x]] <- tolower(as.character(scenarios[[x]]))
     }
     if(x %in% c("num.pops", "Ne", "num.samples", "mig.rate", "mut.rate", 
@@ -72,7 +72,8 @@ runEBVsim <- function(label, scenarios, num.rep,
     stringsAsFactors = FALSE
   )
   
-  params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
+  # params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
+  # names(params$Rland) <- params$scenarios$scenario
   
   sc.rep.vec <- 1:nrow(params$rep.df)
   
@@ -119,14 +120,21 @@ runEBVsim <- function(label, scenarios, num.rep,
     {
       p <- .runFscSim(rep.i, params)
       gen.data <- strataG::fscReadArp(p)
+      if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
+      rm(p)
       if(is.null(gen.data)) return(NULL)
       sc <- params$scenarios[sc.num, ]
       if(sc$rmetasim.ngen > 0) {
         cat(format(Sys.time()), "running rmetasim...\n")
-        gen.data <- gen.data %>% 
-          calcFreqs() %>% 
-          .runRmetasim(Rland = params$Rland[[sc.num]], sc = sc) %>% 
+        gen.freqs <- calcFreqs(gen.data)
+        rm(gen.data)
+        gen.data <- gen.freqs %>% 
+          .runRmetasim(
+            Rland = .setupScRland(sc.num, params), #params$Rland[[sc$scenario]], 
+            sc = sc
+          ) %>% 
           strataG::landscape2df()
+        rm(gen.freqs)
       }
       
       if(!is.na(sc$num.samples)) {
@@ -149,7 +157,6 @@ runEBVsim <- function(label, scenarios, num.rep,
         )
       }
       
-      if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
       out.name
     },
     error = function(e) {

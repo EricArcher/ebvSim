@@ -9,17 +9,6 @@
   })
   deme.list$ploidy <- sc$ploidy
   
-  genetics <- switch(
-    as.character(sc$marker.type),
-    snp = strataG::fscSettingsGenetics(
-      strataG::fscBlock_snp(1, sc$mut.rate), 
-      num.chrom = sc$num.loci
-    )
-  )
-  
-  label <- paste0(
-    params$label, ".sc_", sc$scenario, ".rep_", params$rep.df$rep[rep.i]
-  )
   strataG::fscWrite(
     demes = do.call(strataG::fscSettingsDemes, deme.list),
     migration = if(sc$num.pops > 1) {
@@ -27,8 +16,16 @@
       strataG::fscSettingsMigration(mig.mat)
     } else NULL,
     events = makeEventSettings(sc$dvgnc.time, sc$num.pops),
-    genetics = genetics,
-    label = label,
+    genetics = switch(
+      as.character(sc$marker.type),
+      snp = strataG::fscSettingsGenetics(
+        strataG::fscBlock_snp(1, sc$mut.rate), 
+        num.chrom = sc$num.loci
+      )
+    ),
+    label = paste0(
+      params$label, ".sc_", sc$scenario, ".rep_", params$rep.df$rep[rep.i]
+    ),
     use.wd = params$use.wd
   ) %>% 
     strataG::fscRun(num.cores = 1, exec = params$fsc.exec)
