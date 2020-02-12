@@ -16,26 +16,25 @@
 2\. Install the `ebvSim` package from GitHub with: 
 
 ```r
-devtools::install_github("ericarcher/ebvSim", dependencies = TRUE)
+devtools::install_github("ericarcher/ebvSim", dependencies = TRUE, force = TRUE)
 ```
 This *should* also install *strataG* and *rmetasim* from their GitHub repositories. If these packages are not available after the *ebvSim* installation, install them from:
 
 ```r
-devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE)
-devtools::install_github("stranda/rmetasim", dependencies = TRUE)
+devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE, force = TRUE)
+devtools::install_github("stranda/rmetasim", dependencies = TRUE, force = TRUE)
 ```
 
 3\. By default, *rmetasim* can only simulate a maximum of 1001 loci. If this needs to be increased, it can be done so by changing this constant and recompiling. Instructions for this can be found [here](https://thierrygosselin.github.io/grur/articles/rad_genomics_computer_setup.html#rmetasim).
 
 ***
 
-### Create simulation scenarios
-
-A data frame of scenarios must first be created. The data frame should have the following columns:
+### Select simulation scenarios
+The code is designed to run multiple replicates of a set of demographic scenarios. The scenarios are defined by rows in data frames that are included in the package. The first set of scenarios is called `trial.1`, and has the following columns: 
 
 * __num.pops__: the number of populations.
 * __Ne__: the effective population size.
-* __num.samples__:	the number of samples to simulate. Must be <= Ne.
+* __num.samples__:	the number of samples to simulate. Must be <= Ne. If NA, then num.samples = Ne.
 * __mig.rate__: the migration rate specified as proportion of population migrating per generaton.
 * __mig.type__: the type of of migration matrix structure. "island" = rate between all populations is the same. "stepping.stone" = migration only occurs between neighboring populations. Metapopulation is ring shaped, not a linear chain.
 * __dvgnc.time__: the number of generations since divergence of the populations.
@@ -45,39 +44,25 @@ A data frame of scenarios must first be created. The data frame should have the 
 * __ploidy__: the ploidy of the markers to be simulated. Set to 2 for diploid.
 * __rmetasim.ngen__: the number of generations to run Rmetasim for. Set to 0 to skip Rmetasim.
 
-This data frame can be created in an R script or read from an external file. If you want to create a data frame of all combinatons of vectors of parameters, you can use the function `makeScenarios()`:
-
-```r
-library(ebvSim)
-
-# creates six scenarios of all listed combinations of number of populations and effective populations size
-scenarios <- makeScenarios(
-  num.pops = c(1, 3, 5),
-  Ne = c(10, 100),
-  num.samples = 10,
-  mig.rate = 1e-5,
-  mig.type = "island",
-  dvgnc.time = 100,   
-  marker.type = "snp",
-  mut.rate = 1e-4,
-  num.loci = 1000,
-  ploidy = 2,
-  rmetasim.ngen = 10
-)
-```
+For the first set of trials, we would like people to sign up to run __100 replicates__ of each scenario on the google spreadsheet located [here](https://docs.google.com/spreadsheets/d/1-o7dPFz9l8w2Eh0sox7CV-s6d3NP1XWy5-vCp7kaFEA/edit?usp=sharing).
 
 ***
 
 ### Run the simulations
 
-With the scenarios specified, the simulation can be run with the `runEBVsim()` function:
+To run a specific set of scenarios, the simulation can be run with the `runEBVsim()` function:
 
 ```r
+rm(list = ls())
 library(ebvSim)
+data(trial.1)
 
-params <- runEBVsim(
-  label = "ebvSim.snps_test",
-  scenarios = scenarios,
+# create a vector of specific scenarios
+i <- c(1, 5, 10, 12, 20)
+
+runEBVsim(
+  label = "EIA_trial.1_1",
+  scenarios = trial.1[i, ],
   num.rep = 10,
   num.cores = 4
 )
@@ -85,55 +70,26 @@ params <- runEBVsim(
 
 The parameters for `runEBVsim()` are:
 
-* __label__: text to use to label this set of of scenarios.
-* __scenarios__: the scenarios data frame previously created.
+* __label__: text to use to label this set of of scenarios. The format should be "initials_trial.name_attempt.num". attempt.num can be a number you use to separate different attempts if you're doing either multiple trials or multiple runs of the same set of scenarios on different systems.
+* __scenarios__: the data frame of scenarios to run.
 * __num.rep__: the number of replicates to simulate for each scenario.
-* __num.cores__: the number of cores to use. replicates for each scenario are assigned to one core. If this is set to a value greater than 1, progress notifications will not be printed on the console.
+* __num.cores__: the number of cores to use. Replicates for all scenarios are load balanced amongst the number of cores selected. That is, as cores are freed, the next replicates will be allocated to those cores, so that cores are always working until there are fewer than num.cores replicates left. If this parameter is set to a value greater than 1, progress notifications will not be printed on the console.
+
+__NOTE:__ Some scenarios can take a lot of memory and a long time to run. Resource use scales proportional to the number of individuals (Ne * num.pops). On many systems, multiple cores will share the available memory. Thus, increasing the number of cores to use has the potential to exponentially increase memory usage and cause system crashes. If several large scenarios are in the group being run, it is suggested to use fewer cores and let the simulation run longer. These choices will be system dependant and it suggested that a few test runs be done with a small number of replicates to ensure that crashes do not occur.
+
+***
+
+### Upload simulation results
 
 When the simulations are complete, there will be three new items in the working directory:
 
 * \<label\>_scenario.replicates: a folder containig .csv files of genotypes for each scenario replicate.
 * \<label\>_scenarios.csv: a .csv file of the scenario specifications.
-* \<label\>_params.rdata: an R workspace file containing a a list called `params` that contains the parameters used to to run the scenarios and an element called `$scenario.runs` which is a list of the fastsimcoal output (`$fsc.p`) and genotype files output for each replicate (`$files`). This file will be written when the simulation is complete.
+* \<label\>_params.rdata: an R workspace file containing a a list called `params` that contains the parameters used to to run the scenarios and an element called `$run.smry` which is a data frame of the replicates, their start and stop times, the total run time, and the filename of genotypes created.
 
 The `runEBVsim()` function also invisibly returns the same summary list contained in \<label\>_params.rdata. 
 
-***
-
-### Analyze the replicates
-
-Sets of scenarios can be analyzed with the `analyzeReps()` function. The `params` list saved or returned by `runEBVsim()` needs to be provided which can be found in the saved workspace file. Note that the folder containing the scenario replicate genotype .csv files must also be in the current working directory.
-
-Each analysis is run separately, by providing the name of the desired analysis as the first argument to `analyzeReps()`. Current options are `ldNe` (linkage disequilibrium effective population size), `g2` (inbreeding g2), `het` (observed heterozygosity), `froh` (runs of homozygosity).
-
-The parameter `num.cores` can be specified to spread analyses of replicates among multiple cores.
-
-```r
-# load params into the workspace
-load("ebvSim.snps_test_params.rdata")
-
-# calculate effective population size
-ne <- analyzeReps("ldNe", params)
-
-# calculate inbreeding, heterozygosity, and runs of homozygosity using four cores
-g2 <- analyzeReps("g2", params, num.cores = 4)
-het <- analyzeReps("het", params, 4)
-froh <- analyzeReps("froh", params, 4)
-```
-
-All results from each `analyzeReps()` analysis can then be combined by joining the data frames by the __scenario__, __replicate__, and __stratum__ columns.
-
-```r
-library(tidyverse)
-join.by <- c("scenario", "replicate", "stratum")
-all.ebvs <- ne %>% 
-  left_join(g2, by = join.by) %>% 
-  left_join(het, by = join.by) %>% 
-  left_join(froh, by = join.by)
-  
-# save results to workspace file
-save.image(paste0(params$label, "_analysis results.rdata"))
-```
+When the run is complete, compress the folder of results along with the "_params.rdata" file and upload them to the Google Drive folder [here](https://drive.google.com/open?id=1TGI2TVFnOAx0ib1GdBaL80Pwq-7ruqG1). Name the compressed file "\<label\>_results.tar.gz" (or .zip, or whatever compression algorithm you use).
 
 ***
 
