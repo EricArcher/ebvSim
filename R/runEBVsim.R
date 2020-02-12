@@ -75,12 +75,11 @@ runEBVsim <- function(label, scenarios, num.rep,
   # params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
   # names(params$Rland) <- params$scenarios$scenario
   
-  sc.rep.vec <- 1:nrow(params$rep.df)
-  
   start.time <- Sys.time()
   cat(format(start.time), "Running", nrow(params$scenarios), "scenarios...\n")
   print(params$scenarios[, c("scenario", "num.pops", "Ne", "num.samples", "mig.rate", "mig.type")])
-  params$replicate.fnames <- if(num.cores == 1) {  
+  sc.rep.vec <- 1:nrow(params$rep.df)
+  params$run.smry <- if(num.cores == 1) {  
     tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
   } else {
     cl <- strataG:::.setupClusters(num.cores)
@@ -90,9 +89,11 @@ runEBVsim <- function(label, scenarios, num.rep,
       parallel::parLapplyLB(cl, sc.rep.vec, .runScRep, params = params)
     }, finally = parallel::stopCluster(cl))
   }
-  params$replicate.fnames <- unlist(params$replicate.fnames)
+  params$run.smry <- do.call(rbind, params$run.smry)
+  params$rep.df <- NULL
   cat(format(Sys.time()), "Run complete!!\n")
   cat("Total time:", format(round(difftime(Sys.time(), start.time), 2)), "\n")
+  print(params$run.smry[, c("scenario", "replicate", "start", "run.time")])
   
   save(params, file = paste0(params$label, "_params.rdata"))
   invisible(params)
@@ -118,6 +119,7 @@ runEBVsim <- function(label, scenarios, num.rep,
   
   tryCatch(
     {
+      start.time <- Sys.time()
       p <- .runFscSim(rep.i, params)
       gen.data <- strataG::fscReadArp(p)
       if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
@@ -144,6 +146,7 @@ runEBVsim <- function(label, scenarios, num.rep,
         gen.data <- gen.data[unlist(to.keep), ]
       }
       gen.data$id <- 1:nrow(gen.data)
+      end.time <- Sys.time()
       
       fname <- repFname(params$label, sc$scenario, rep.num)
       out.name <- file.path(params$folders$out, fname)
@@ -157,7 +160,15 @@ runEBVsim <- function(label, scenarios, num.rep,
         )
       }
       
-      out.name
+      data.frame(
+        scenario = sc$scenario,
+        replicate = rep.num,
+        start = start.time, 
+        end = end.time, 
+        run.time = difftime(end.time, start.time, units = "mins"),
+        fname = out.name, 
+        stringsAsFactors = FALSE
+      )
     },
     error = function(e) {
       stop(
