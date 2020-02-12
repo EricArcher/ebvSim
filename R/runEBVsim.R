@@ -74,7 +74,7 @@ runEBVsim <- function(label, scenarios, num.rep,
   
   # params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
   # names(params$Rland) <- params$scenarios$scenario
-  
+  x <- gc(FALSE)
   start.time <- Sys.time()
   cat(format(start.time), "Running", nrow(params$scenarios), "scenarios...\n")
   print(params$scenarios[, c("scenario", "num.pops", "Ne", "num.samples", "mig.rate", "mig.type")])
@@ -95,6 +95,7 @@ runEBVsim <- function(label, scenarios, num.rep,
   cat("Total time:", format(round(difftime(Sys.time(), start.time), 2)), "\n")
   print(params$run.smry[, c("scenario", "replicate", "start", "run.time")])
   
+  x <- gc(FALSE)
   save(params, file = paste0(params$label, "_params.rdata"))
   invisible(params)
 }
@@ -124,6 +125,7 @@ runEBVsim <- function(label, scenarios, num.rep,
       gen.data <- strataG::fscReadArp(p)
       if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
       rm(p)
+      x <- gc(FALSE)
       if(is.null(gen.data)) return(NULL)
       sc <- params$scenarios[sc.num, ]
       if(sc$rmetasim.ngen > 0) {
@@ -151,6 +153,9 @@ runEBVsim <- function(label, scenarios, num.rep,
       fname <- repFname(params$label, sc$scenario, rep.num)
       out.name <- file.path(params$folders$out, fname)
       utils::write.csv(gen.data, file = out.name, row.names = FALSE)
+      rm(gen.data)
+      x <- gc(FALSE)
+      
       if(!is.null(params$rep.id)) {
         googledrive::drive_upload(
           out.name, 
@@ -171,12 +176,21 @@ runEBVsim <- function(label, scenarios, num.rep,
       )
     },
     error = function(e) {
-      stop(
+      header <- paste0(
         format(Sys.time()),
         " Scenario ", params$scenarios$scenario[sc.num],
-        ", Replicate ", rep.num, 
-        ": ", e
+        ", Replicate ", rep.num
       )
+      writeLines(
+        paste(header, ":", e, "\n"), 
+        con = paste0(params$label, "_ERROR_text.txt")
+      )
+      utils::write.csv(gc(), file = paste0(params$label, "_ERROR_memory.csv"))
+      save(
+        rep.i, sc.num, rep.num, params, 
+        file = paste0(params$label, "_ERROR_workspace.rdata")
+      )
+      stop(header, " : ", e)
     }
   )
 }
