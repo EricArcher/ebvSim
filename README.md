@@ -30,7 +30,7 @@ devtools::install_github("stranda/rmetasim", dependencies = TRUE, force = TRUE)
 ***
 
 ### Select simulation scenarios
-The code is designed to run multiple replicates of a set of demographic scenarios. The scenarios are defined by rows in data frames that are included in the package. The first set of scenarios is called `trial.1`, and has the following columns: 
+The code is designed to run multiple replicates of a set of demographic scenarios. The scenarios are defined by rows in data frames that are included in the package. The first set of scenarios is called [`trial.1`](https://docs.google.com/spreadsheets/d/1-o7dPFz9l8w2Eh0sox7CV-s6d3NP1XWy5-vCp7kaFEA/edit?usp=sharing), and has the following columns: 
 
 * __num.pops__: the number of populations.
 * __Ne__: the effective population size.
@@ -44,7 +44,7 @@ The code is designed to run multiple replicates of a set of demographic scenario
 * __ploidy__: the ploidy of the markers to be simulated. Set to 2 for diploid.
 * __rmetasim.ngen__: the number of generations to run Rmetasim for. Set to 0 to skip Rmetasim.
 
-For the first set of trials, we would like people to sign up to run __100 replicates__ of each scenario on the google spreadsheet located [here](https://docs.google.com/spreadsheets/d/1-o7dPFz9l8w2Eh0sox7CV-s6d3NP1XWy5-vCp7kaFEA/edit?usp=sharing).
+For the first set of trials, we would like people to sign up to run __100 replicates__ of each scenario on the [google spreadsheet](https://docs.google.com/spreadsheets/d/1-o7dPFz9l8w2Eh0sox7CV-s6d3NP1XWy5-vCp7kaFEA/edit?usp=sharing).
 
 ***
 
