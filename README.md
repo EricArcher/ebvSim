@@ -21,7 +21,7 @@ devtools::install_github("ericarcher/ebvSim", dependencies = TRUE, force = TRUE)
 This *should* also install *strataG* and *rmetasim* from their GitHub repositories. If these packages are not available after the *ebvSim* installation, install them from:
 
 ```r
-devtools::install_github("ericarcher/strataG", ref = "redevel2018", dependencies = TRUE, force = TRUE)
+devtools::install_github("ericarcher/strataG", dependencies = TRUE, force = TRUE)
 devtools::install_github("stranda/rmetasim", dependencies = TRUE, force = TRUE)
 ```
 
