@@ -2,7 +2,7 @@
 
 ### Description
 
-*ebvSim* is a package for simulating SNP data and testing the performance of various genetic diversity metrics. The package will simulate replicate data for multiple scenarios. It is a wrapper that the coalescent simulator *fastsimcoal2* through the *strataG* package, and then runs a few generations of a forward simulator, *rmetasim*, initialized with allele frequencies from the genotypes output by *fastsimcoal2*.
+*ebvSim* is a package for simulating SNP data and testing the performance of various genetic diversity metrics. The package will simulate replicate data for multiple scenarios. It is a wrapper for the coalescent simulator *fastsimcoal2* run through the *strataG* package, which then runs a few generations of a forward simulator, *rmetasim*, initialized with allele frequencies from the genotypes output by *fastsimcoal2*.
 
 ***
 
