@@ -77,6 +77,10 @@ The parameters for `runEBVsim()` are:
 
 __NOTE:__ Some scenarios can take a lot of memory and a long time to run. Resource use scales proportional to the number of individuals (Ne * num.pops). On many systems, multiple cores will share the available memory. Thus, increasing the number of cores to use has the potential to exponentially increase memory usage and cause system crashes. If several large scenarios are in the group being run, it is suggested to use fewer cores and let the simulation run longer. These choices will be system dependant and it suggested that a few test runs be done with a small number of replicates to ensure that crashes do not occur.
 
+If you have an error, check your folder for files that end in "_ERROR.ext". If they exist, send them to Eric Archer along with a zip of the completed scenario data. If the system crashes due to memory problems, these files will probably not be produced. In that case, reduce the number of cores being used and try to run again. 
+
+If errors or crashes occur, do not delete the scenario replicates that have already run - they can still be used. Just reduce the number of new replicates that are being run and change the attempt number in \<label\>.
+
 ***
 
 ### Upload simulation results

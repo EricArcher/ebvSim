@@ -74,28 +74,65 @@ runEBVsim <- function(label, scenarios, num.rep,
   
   # params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
   # names(params$Rland) <- params$scenarios$scenario
-  x <- gc(FALSE)
-  start.time <- Sys.time()
-  cat(format(start.time), "Running", nrow(params$scenarios), "scenarios...\n")
-  print(params$scenarios[, c("scenario", "num.pops", "Ne", "num.samples", "mig.rate", "mig.type")])
-  sc.rep.vec <- 1:nrow(params$rep.df)
-  params$run.smry <- if(num.cores == 1) {  
-    tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
-  } else {
-    cl <- strataG:::.setupClusters(num.cores)
-    tryCatch({
-      parallel::clusterEvalQ(cl, require(ebvSim))
-      parallel::clusterExport(cl, "params", environment())
-      parallel::parLapplyLB(cl, sc.rep.vec, .runScRep, params = params)
-    }, finally = parallel::stopCluster(cl))
-  }
-  params$run.smry <- do.call(rbind, params$run.smry)
-  params$rep.df <- NULL
-  cat(format(Sys.time()), "Run complete!!\n")
-  cat("Total time:", format(round(difftime(Sys.time(), start.time), 2)), "\n")
-  print(params$run.smry[, c("scenario", "replicate", "start", "run.time")])
   
-  x <- gc(FALSE)
+  
+  # Run start header
+  start.time <- Sys.time()
+  cat(
+    paste0("\n", format(start.time)), 
+    "Running", num.rep, "replicates of", 
+    nrow(params$scenarios), "scenarios...\n\n"
+  )
+  is.1.val <- sapply(params$scenarios, function(x) length(unique(x)) == 1)
+  not.1.val <- colnames(params$scenarios)[!is.1.val]
+  print(params$scenarios[, not.1.val])
+  for(x in colnames(params$scenarios)[is.1.val]) {
+    cat(x, "=", unique(params$scenarios[[x]]), "\n")
+  }
+  cat("\n")
+    
+  suppressMessages({
+    # Run simulation
+    x <- gc(FALSE)
+    sc.rep.vec <- 1:nrow(params$rep.df)
+    run.smry <- if(num.cores == 1) {  
+      tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
+      cat("\n")
+    } else {
+      cl <- strataG:::.setupClusters(num.cores)
+      tryCatch({
+        parallel::clusterEvalQ(cl, require(ebvSim))
+        parallel::clusterExport(cl, "params", environment())
+        parallel::parLapplyLB(cl, sc.rep.vec, .runScRep, params = params)
+      }, finally = parallel::stopCluster(cl))
+    }
+    x <- gc(FALSE)
+  })
+  
+  # Show and return results
+  run.time <- difftime(Sys.time(), start.time)
+  cat(
+    format(Sys.time()), "Run complete in", 
+    format(round(run.time, 2)), "\n\n"
+  )
+  run.smry <- do.call(rbind, run.smry)
+  units(run.smry$run.time) <- units(run.time)
+  params$scenarios[, not.1.val] %>% 
+    dplyr::left_join(
+      run.smry %>% 
+        dplyr::group_by(.data$scenario) %>% 
+        dplyr::summarize(
+          mean.rep.time = round(mean(.data$run.time), 2),
+          total.scn.time = round(sum(.data$run.time), 2)
+        ) %>% 
+        dplyr::ungroup(), 
+      by = "scenario"
+    ) %>%
+    print()
+  
+  params$scenarios <- params$scenarios %>% 
+    dplyr::left_join(run.smry, by = "scenario")
+  params$rep.df <- NULL
   save(params, file = paste0(params$label, "_params.rdata"))
   invisible(params)
 }
@@ -103,6 +140,7 @@ runEBVsim <- function(label, scenarios, num.rep,
 #' @noRd
 #' 
 .runWithLabel <- function(rep.i, params) {
+  # print label for each replicate when num.cores = 1
   cat(paste0(
     format(Sys.time()), 
     " ---- Scenario ", params$scenarios$scenario[params$rep.df$sc[rep.i]], 
@@ -121,6 +159,7 @@ runEBVsim <- function(label, scenarios, num.rep,
   tryCatch(
     {
       start.time <- Sys.time()
+      # fastsimcoal2 run and extract data
       p <- .runFscSim(rep.i, params)
       gen.data <- strataG::fscReadArp(p)
       if(params$delete.fsc.files) strataG::fscCleanup(p$label, p$folder)
@@ -128,6 +167,7 @@ runEBVsim <- function(label, scenarios, num.rep,
       x <- gc(FALSE)
       if(is.null(gen.data)) return(NULL)
       sc <- params$scenarios[sc.num, ]
+      # rmetasim run if requested
       if(sc$rmetasim.ngen > 0) {
         cat(format(Sys.time()), "running rmetasim...\n")
         gen.freqs <- calcFreqs(gen.data)
@@ -141,6 +181,7 @@ runEBVsim <- function(label, scenarios, num.rep,
         rm(gen.freqs)
       }
       
+      # return subset of samples if num.samples is not NA
       if(!is.na(sc$num.samples)) {
         to.keep <- tapply(1:nrow(gen.data), gen.data$strata, function(i) {
           if(length(i) <= sc$num.samples) i else sample(i, sc$num.samples)
@@ -150,6 +191,7 @@ runEBVsim <- function(label, scenarios, num.rep,
       gen.data$id <- 1:nrow(gen.data)
       end.time <- Sys.time()
       
+      # write data
       fname <- repFname(params$label, sc$scenario, rep.num)
       out.name <- file.path(params$folders$out, fname)
       utils::write.csv(gen.data, file = out.name, row.names = FALSE)
@@ -165,6 +207,7 @@ runEBVsim <- function(label, scenarios, num.rep,
         )
       }
       
+      # return run summary
       data.frame(
         scenario = sc$scenario,
         replicate = rep.num,
