@@ -89,7 +89,7 @@ When the simulations are complete, there will be three new items in the working 
 
 * \<label\>_scenario.replicates: a folder containig .csv files of genotypes for each scenario replicate.
 * \<label\>_scenarios.csv: a .csv file of the scenario specifications.
-* \<label\>_params.rdata: an R workspace file containing a a list called `params` that contains the parameters used to to run the scenarios and an element called `$run.smry` which is a data frame of the replicates, their start and stop times, the total run time, and the filename of genotypes created.
+* \<label\>_params.rdata: an R workspace file containing a a list called `params` that contains the parameters used to to run the scenarios and a summary of the scenario replicates, with their start and stop times, the total run time, and the filename of genotypes created.
 
 The `runEBVsim()` function also invisibly returns the same summary list contained in \<label\>_params.rdata. 
 
