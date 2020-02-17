@@ -85,7 +85,8 @@ runEBVsim <- function(label, scenarios, num.rep,
   )
   is.1.val <- sapply(params$scenarios, function(x) length(unique(x)) == 1)
   not.1.val <- colnames(params$scenarios)[!is.1.val]
-  print(params$scenarios[, not.1.val])
+  print.df <- if(length(not.1.val) > 0) params$scenarios[, not.1.val] else NULL
+  if(!is.null(print.df)) print(print.df)
   for(x in colnames(params$scenarios)[is.1.val]) {
     cat(x, "=", unique(params$scenarios[[x]]), "\n")
   }
@@ -117,23 +118,26 @@ runEBVsim <- function(label, scenarios, num.rep,
   )
   run.smry <- do.call(rbind, run.smry)
   units(run.smry$run.time) <- units(run.time)
-  params$scenarios[, not.1.val] %>% 
-    dplyr::left_join(
-      run.smry %>% 
-        dplyr::group_by(.data$scenario) %>% 
-        dplyr::summarize(
-          mean.rep.time = round(mean(.data$run.time), 2),
-          total.scn.time = round(sum(.data$run.time), 2)
-        ) %>% 
-        dplyr::ungroup(), 
-      by = "scenario"
-    ) %>%
-    print()
   
   params$scenarios <- params$scenarios %>% 
     dplyr::left_join(run.smry, by = "scenario")
   params$rep.df <- NULL
   save(params, file = paste0(params$label, "_params.rdata"))
+  
+  if(!is.null(print.df)) {
+    params$scenarios[, not.1.val] %>% 
+      dplyr::left_join(
+        run.smry %>% 
+          dplyr::group_by(.data$scenario) %>% 
+          dplyr::summarize(
+            mean.rep.time = round(mean(.data$run.time), 2),
+            total.scn.time = round(sum(.data$run.time), 2)
+          ) %>% 
+          dplyr::ungroup(), 
+        by = "scenario"
+      ) %>%
+      print()
+  }
   invisible(params)
 }
 
