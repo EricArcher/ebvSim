@@ -11,7 +11,7 @@
 #' @export
 #'
 calc_g2 <- function(x, nboot = 100) {
-  split(x, x$stratum) %>% 
+  split(x, x$strata) %>% 
     purrr::map(function(x.st) inbreedR::convert_raw(x.st[, -(1:2)])) %>% 
     #purrr::list_modify(global = inbreedR::convert_raw(x[, -(1:2)])) %>% 
     purrr::map(function(x.st) {

@@ -4,18 +4,19 @@
 \alias{analyzeReps}
 \title{Analyze Replicates}
 \usage{
-analyzeReps(analysis, params, num.cores = 1)
+analyzeReps(folder, scenarios = NULL, analyses = NULL, num.cores = 1)
 }
 \arguments{
-\item{analysis}{character vector of EBV analysis to run (`ldNe`, `g2`, 
-`het`, or `froh`).}
+\item{folder}{folder containing replicate .csv files.}
 
-\item{params}{parameter list output from \code{runEBVsim()}.}
+\item{scenarios}{vector of scenario numbers to analyze.}
+
+\item{analyses}{named list of EBV analyses to run.}
 
 \item{num.cores}{number of cores to use to split replicate analyses among.}
 }
 \value{
-data frame of summary metrics
+list of data frames of summary metrics
 }
 \description{
 Conduct analysis of all replicates for a given EBV

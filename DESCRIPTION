@@ -8,6 +8,7 @@ Authors@R: c(EA = person("Eric", "Archer", email = "eric.archer@noaa.gov", role 
 Depends:
     R (>= 3.5.0)
 Imports:
+  data.table,
   detectRUNS,
   dplyr,
   googledrive,
@@ -18,13 +19,16 @@ Imports:
   rlang,
   rmetasim,
   stats,
+  stringr,
   strataG,
+  swfscMisc (>= 1.3),
   tibble,
   tidyr,
   utils
 Remotes:
   github::stranda/rmetasim,
-  github::ericarcher/strataG
+  github::ericarcher/strataG,
+  github::ericarcher/swfscMisc
 License: GNU General Public License
 RoxygenNote: 7.0.2
 Encoding: UTF-8

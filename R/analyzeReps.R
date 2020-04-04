@@ -1,65 +1,91 @@
 #' @title Analyze Replicates
 #' @description Conduct analysis of all replicates for a given EBV
-#'   
-#' @param analysis character vector of EBV analysis to run (`ldNe`, `g2`, 
-#'   `het`, or `froh`).   
-#' @param params parameter list output from \code{runEBVsim()}.
+#'
+#' @param folder folder containing replicate .csv files.
+#' @param scenarios vector of scenario numbers to analyze.
+#' @param analyses named list of EBV analyses to run.   
 #' @param num.cores number of cores to use to split replicate analyses among.
 #' 
-#' @return data frame of summary metrics
+#' @return list of data frames of summary metrics
 #'   
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #' 
 #' @export
 #'  
-analyzeReps <- function(analysis, params, num.cores = 1) {
-    
-  params$replicates <- expand.grid(
-    scenario = params$scenarios$scenario, 
-    replicate = 1:params$num.rep
-  )
-  params$analysis.func <- switch(
-    analysis,
-    ldNe = calc_ldNe,
-    g2 = calc_g2,
-    het = calc_heterozygosity,
-    froh = calc_froh
-  )
+analyzeReps <- function(folder, scenarios = NULL, 
+                        analyses = NULL, num.cores = 1) {
+  if(is.null(analyses)) {
+    analyses <- list(
+      ldNe = calc_ldNe,
+      g2 = calc_g2,
+      het = calc_heterozygosity,
+      froh = calc_froh
+    )
+  }
+  if(is.null(names(analyses))) names(analyses) <- 1:length(analyses)
+  sc.df <- repCSVfiles(folder) 
+  if(is.null(scenarios)) scenarios <- unique(sc.df$scenario)
+  sc.df <- sc.df[sc.df$scenario %in% scenarios, ]
+  n <- nrow(sc.df)
   
-  n <- nrow(params$replicates)
-  cat(format(Sys.time()), "Conducting", analysis, "analysis of", n, "replicates...\n")
+  cat(format(Sys.time()), "Starting analysis of", n, "replicates...\n")
   
-  result <- if(num.cores == 1) {
-    lapply(1:n, function(i, p = params) {
-      cat(i, "/", n, "\n")
-      .repAnalysis(i, p)
-    })
+  files.written <- if(num.cores == 1) {
+    sapply(1:n, .repAnalysis, rep.df = sc.df, analyses = analyses)
   } else {
     cl <- strataG:::.setupClusters(num.cores)
     tryCatch({
       parallel::clusterEvalQ(cl, require(ebvSim))
-      parallel::clusterExport(cl, "params", environment())
-      parallel::parLapplyLB(cl, 1:n, .repAnalysis, p = params)
+      parallel::clusterEvalQ(cl, require(strataG))
+      parallel::clusterExport(cl, c("sc.df", "analyses"), environment())
+      parallel::parSapplyLB(
+        cl, 1:n, .repAnalysis, rep.df = sc.df, analyses = analyses
+      )
     }, finally = parallel::stopCluster(cl))
   } 
   
-  cat(format(Sys.time()), analysis, "analysis complete!\n")
+  cat(format(Sys.time()), "Analysis complete!\n")
   
-  result %>% 
-    dplyr::bind_rows() %>% 
-    dplyr::arrange(.data$scenario, .data$replicate, .data$stratum)
+  sc.df$files.written <- files.written
+  sc.df
 }
 
 #' @noRd
 #' 
-.repAnalysis <- function(i, p) {
-  sc <- p$replicates$scenario[i]
-  rep <- p$replicates$replicate[i]
-  results <- loadGenotypes(p$label, sc, rep) %>% 
-    p$analysis.func() 
-  if(!is.null(results)) {
+.repAnalysis <- function(i, rep.df, analyses) {
+  sc <- rep.df$scenario[i]
+  rep <- rep.df$replicate[i]
+  
+  out.folder <- "analysis.results"
+  if(!dir.exists(out.folder)) dir.create(out.folder)
+  out.file <- file.path(
+    out.folder,
+    paste0("scenario.", sc, "_replicate.", rep, "_analysis.results.csv")
+  )
+  if(file.exists(out.file)) return(FALSE)
+                     
+  cat(format(Sys.time()), "Scenario", sc, "/ Replicate", rep, "\n")
+  
+  f.df <- data.table::fread(file = rep.df$fname[i])
+  results <- sapply(names(analyses), function(x) {
+    cat(format(Sys.time()), "...", x, "\n")
+    suppressMessages(results <- analyses[[x]](f.df))
+    if(is.null(results)) return(NULL)
     results %>% 
       dplyr::mutate(scenario = sc, replicate = rep) %>% 
-      dplyr::select(.data$scenario, .data$replicate, .data$stratum, dplyr::everything())
-  } else NULL
+      dplyr::select(
+        .data$scenario, .data$replicate, .data$stratum, dplyr::everything()
+      )
+  }, simplify = FALSE) 
+  
+  results <- results[!sapply(results, is.null)]
+  if(length(results) > 1) {
+    results <- purrr::reduce(
+      results,
+      dplyr::full_join, by = c("scenario", "replicate", "stratum")
+    )
+  }
+  
+  utils::write.csv(results, file = out.file, row.names = FALSE)
+  return(TRUE)
 }

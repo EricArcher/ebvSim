@@ -75,7 +75,6 @@ runEBVsim <- function(label, scenarios, num.rep,
   # params$Rland <- lapply(1:nrow(params$scenarios), .setupScRland, params = params)
   # names(params$Rland) <- params$scenarios$scenario
   
-  
   # Run start header
   start.time <- Sys.time()
   cat(
@@ -96,17 +95,17 @@ runEBVsim <- function(label, scenarios, num.rep,
     # Run simulation
     x <- gc(FALSE)
     sc.rep.vec <- 1:nrow(params$rep.df)
-    run.smry <- if(num.cores == 1) {  
-      tryCatch(lapply(sc.rep.vec, .runWithLabel, params = params))
-      cat("\n")
-    } else {
-      cl <- strataG:::.setupClusters(num.cores)
-      tryCatch({
+    cl <- swfscMisc::setupClusters(num.cores)
+    run.smry <- tryCatch({
+      if(is.null(cl)) {  
+        lapply(sc.rep.vec, .runWithLabel, params = params)
+        cat("\n")
+      } else {
         parallel::clusterEvalQ(cl, require(ebvSim))
         parallel::clusterExport(cl, "params", environment())
         parallel::parLapplyLB(cl, sc.rep.vec, .runScRep, params = params)
-      }, finally = parallel::stopCluster(cl))
-    }
+      }
+    }, finally = if(!is.null(cl)) parallel::stopCluster(cl) else NULL)
     x <- gc(FALSE)
   })
   
